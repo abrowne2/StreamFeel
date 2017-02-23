@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <!--
+  Modified by Adam Browne to incorporate streamfeel. Additional:
+  Copyright (c) 2013 The Chromium Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file.
+  -->
+<head>
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1">
+  <title>StreamFeel Client</title>
+  <script type="text/javascript" src="../../src/inject/common.js"></script>
+  <script type="text/javascript" src="../../src/inject/handler.js"></script>
+  <script type="text/javascript" src="../../src/inject/default.js"></script>  
+</head>
+<body data-name="stream_feel" data-tools="pnacl glibc clang-newlib mac" data-configs="Release Debug" data-path="{tc}/{config}">
+  <h1>StreamFeel Client</h1>
+  <h2>Status: <code id="statusField">NO-STATUS</code></h2>
+  <!--
+  common.js adds the native client module to the listener div by embedded it.
+  -->
+  <div id="listener"></div>
+</body>
+</html>

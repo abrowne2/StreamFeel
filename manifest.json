@@ -1,0 +1,44 @@
+{
+  "name": "StreamFeel - Twitch Analytics",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "background": {
+    "page": "pnacl/Release/background.html"
+  },
+  "description": "This extension was created with the awesome extensionizr.com",
+  "homepage_url": "http://extensionizr.com",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "default_locale": "en",
+  "page_action": {
+    "default_icon": "icons/icon19.png",
+    "default_title": "page action demo",
+    "default_popup": "src/page_action/page_action.html"
+  },
+  "permissions": [
+    "https://twitch.tv/*",
+    "background",
+    "unlimitedStorage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.twitch.tv/*"
+      ],
+      "css": [
+        "src/inject/inject.css"
+      ]
+    },
+    {
+      "matches": [
+        "https://www.twitch.tv/*"
+      ],
+      "js": [
+        "src/inject/inject.js"
+      ]
+    }
+  ]
+}

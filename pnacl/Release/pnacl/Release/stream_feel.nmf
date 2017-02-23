@@ -1,0 +1,12 @@
+{
+  "program": {
+    "portable": {
+      "pnacl-translate": {
+        "url": "stream_feel.pexe"
+      },
+      "pnacl-debug": {
+        "url": "stream_feel_unstripped.bc"
+      }
+    }
+  }
+}
