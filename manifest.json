@@ -5,8 +5,8 @@
   "background": {
     "page": "pnacl/Release/background.html"
   },
-  "description": "This extension was created with the awesome extensionizr.com",
-  "homepage_url": "http://extensionizr.com",
+  "description": "Twitch chat analytics <change desc here>",
+  "homepage_url": "http://needwebpage.com",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
