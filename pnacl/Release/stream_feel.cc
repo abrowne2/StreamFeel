@@ -1,50 +1,84 @@
 //Author: Adam Browne; as well as The Chromium Authors, whom
 // were responsible for the module and instance structure,
 // I (Adam Browne) wrote all subsequent code which includes;
-// OpenCV ML usage, message handling logic, and any further code
+// Mitie ML usage, message handling logic, and any further code
 #include <vector>
 #include <string>
+#include <algorithm>
 
+/*9:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
 #include "ppapi/cpp/var_array.h"
-#include "opencv2/ml/ml.hpp" //we need for the opencv ML library port.
-#include "opencv2/core/mat.hpp"
+#include "mitie/mitie/text_categorizer.h"
+#include "mitie/mitie/text_categorizer_trainer.h"
 
-typedef CvNormalBayesClassifier CvBayes;
 
-struct relevanceClassifier : public CvBayes {
-	//keep these here for now, we're going to use to train our classifier.
-	cv::Mat l, r;
-	bool loaded = false;
+//NOTE TO SELF:
+//WHEN PREDICTING, IF THE MODEL HAS NOT BEEN ˇRAINED YET,
+//MAKE SURE THAT WE STORE ALL MESSAGES IN A QUEUE SO THAT THEY CAN ACCESSED PROMPLTY.
 
-	void loadContainers(pp::VarArray& message){
-		//containers we're using to convert to needed material.
-		std::vector<std::string> labels;
-		std::vector<int> responses;
+//we're using MIT's Information Extraction Library / Tool(s)
+using namespace mitie;
 
-		int i = 1, data_size = message.Get(0).AsInt();
-		int needed = data_size / 2;
-		//reserve the needed memory for these containers.
-		labels.reserve(needed);
-		responses.reserve(needed);
-		//load our containers.		
-		while(i <= data_size){
-			if(i & 1)
-				labels.push_back(message.Get(i).AsString());
-			else
-				responses.push_back(message.Get(i).AsInt());
-			++i;
+struct relevanceClassifier {
+	//text categorizer to determine relevance.
+	text_categorizer drelevant;
+
+	static bool checkSpaces(char left, char right) 
+		{ return (left == right) && (left == ' '); }
+
+	//trims whitespace, then reduces it down into 1 each.
+	void simplifyString(std::string& input){
+		if(input[0] == ' ' || input[input.size()-1] == ' '){
+			size_t pos = input.find_first_not_of(" "); //leading spaces.
+			input.erase(0, pos);
+			pos = input.find_last_not_of(" ");
+			if(std::string::npos != pos)
+				input.erase(pos+1);
 		}
-		l = cv::Mat(labels, true);
-		r = cv::Mat(responses, true);
-		loaded = true;
+		//then, reduce multiple spaces into one between each valid character.
+		if(input.find(' ') != std::string::npos) {    
+			auto badspace = std::unique(input.begin(), input.end(), checkSpaces);
+			input.erase(badspace, input.end());
+		}
 	}
 	
-	void trainRC() {
-		this->train(l,r);
+	/* In order to categorize a msg, we must first tokenize it.
+	 * this helper function does that by parsing spaces. */
+	std::vector<std::string> tokenize_msg(std::string& input){
+		simplifyString(input);
+		std::vector<std::string> tokens;
+		tokens.reserve(input.size());
+		int curSpace = input.find(" "), curPos = 0;
+		while(curSpace != std::string::npos){
+			tokens.push_back(input.substr(curPos,curSpace-curPos));
+			curPos = curSpace+1;
+			curSpace = input.find(" ",curPos);		
+		}
+		//if no space, or last region, push it in.
+		tokens.push_back(input.substr(curPos));
+		return tokens;
 	}
+
+	void train(pp::VarArray& message){
+		//we're going to assign our categorizer to this after
+		text_categorizer_trainer fit;
+		int i = 0, data_size = message.GetLength();
+		//build our BoW (bag of words categorizer)
+		while(i < data_size - 1){
+			std::string curMessage = message.Get(i).AsString();
+			//relevant => "y" ; not relevant => "n"
+			std::string rel_label = message.Get(i+1).AsString();
+			fit.add(tokenize_msg(curMessage),rel_label);
+			i += 2; //because of the format, we increment by 2.
+		}
+		fit.set_num_threads(4); //experimental...
+		//train the categorizer.
+		drelevant = fit.train();
+	}
+	
 };
 
 
@@ -54,7 +88,7 @@ struct relevanceClassifier : public CvBayes {
  * classifier and then fit it accordingly when handling messages. */
 namespace {
 	//we're going to use this to classify text as relevant.
-	relevanceClassifier RC = relevanceClassifier();
+	relevanceClassifier RC;
 }  // namespace
 
 
@@ -94,9 +128,12 @@ class StreamFeelModInstance : public pp::Instance {
     // Ignore the message if it is not a string.
     if (!var_message.is_string()){
       if(var_message.is_array()){
-      	auto arr = pp::VarArray(var_message);
-      	RC.loadContainers(arr);
-      	RC.trainRC();
+		auto val = pp::VarArray(var_message);
+		//loads our containers and trains the classifier.
+		RC.train(val);
+		std::string YES = "Successful training of dataset!!!";
+		pp::Var var_reply(YES);
+		PostMessage(YES);
       }
       return;
     }

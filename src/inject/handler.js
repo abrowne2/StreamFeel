@@ -25,7 +25,5 @@ function handleMessage(message) {
 }
 
 function trainClassifier() {
-    var default_data = default.relevance_data;
-    default_data.splice(0,default_data.length);
-    return default_data;
+    return relevance_data;
 }
