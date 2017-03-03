@@ -5,8 +5,10 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <queue>
 
-/*9:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
+/*10:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
+/*11:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
@@ -25,7 +27,7 @@ using namespace mitie;
 struct relevanceClassifier {
 	//text categorizer to determine relevance.
 	text_categorizer drelevant;
-
+	
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
 
@@ -79,6 +81,15 @@ struct relevanceClassifier {
 		drelevant = fit.train();
 	}
 	
+	std::string isRelevant(std::string& message){
+		//get our tokens to predict if a msg is relevant.
+		auto token = tokenize_msg(message);
+		std::string tag;
+		double confidence;
+		drelevant.predict(token, tag, confidence);
+		std::string returner = "tag: " + tag + " ,confidence: " + to_string(confidence);
+		return returner;
+	}
 };
 
 
@@ -89,13 +100,28 @@ struct relevanceClassifier {
 namespace {
 	//we're going to use this to classify text as relevant.
 	relevanceClassifier RC;
+	std::string current_user;
 }  // namespace
 
 
 
 struct StreamMessage {
 	std::string id, time, user, msg;	
-		
+	bool userMentioned = false, cmdMsg = false;		
+
+	/* determineMention will parse the message and see if
+	 * the user using StreamFeel was mentioned. We will parse any and all
+	 * mentions out of the string regardless; so that the classifier isn't confused. */
+	void determineMention(std::string& cur_user){
+		//once we've determined the user's name, we then parse the mention in it...
+		std::string look_for = '@' + cur_user;
+		auto user_mention = msg.find(look_for);
+		if(user_mention != std::string::npos){
+			userMentioned = true;
+			//finish this~!!!
+		}
+
+	}
 	/* A 'StreamMessage' is constructed by parsing the original data,
 	 * where it is subsequently used for computation. */
 	StreamMessage(std::string& data){
@@ -131,23 +157,21 @@ class StreamFeelModInstance : public pp::Instance {
 		auto val = pp::VarArray(var_message);
 		//loads our containers and trains the classifier.
 		RC.train(val);
-		std::string YES = "Successful training of dataset!!!";
-		pp::Var var_reply(YES);
-		PostMessage(YES);
+		std::string complete = "Train complete";
+      	pp::Var reply(complete);
+      	PostMessage(reply);
       }
       return;
     }
-
-  	//get the string message and parse it.
-    std::string message = var_message.AsString();
+	//get the string message and parse it.
+	std::string message = var_message.AsString();
 	//test our parser:
-	StreamMessage test = StreamMessage(message);
-	//now, build the test return string.
-	std::string returner = test.id+'|'+test.time+'|'+test.user+'|'+test.msg;
-    // make a reply using:
-    pp::Var var_reply(returner);
-    //post the msg using PostMessage(var_reply) ^^
-    PostMessage(var_reply);
+	StreamMessage parsed = StreamMessage(message);
+	std::string relevant = RC.isRelevant(parsed.msg);
+	// make a reply using:
+	pp::Var var_reply(relevant);
+	//post the msg using PostMessage(var_reply) ^^
+	PostMessage(var_reply);
   }
 };
 
