@@ -9,7 +9,8 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     });
 
     //need to fix this first.
-    var streamfeel_user = document.getElementsByClassName("js-chat-display");
+    var streamfeel_user = document.getElementsByClassName(".chat-menu-content");
+    // .children[0].children[1].innerText;
     // streamfeel_user = streamfeel_user.querySelector(".chat-menu-content")
     // .querySelector("div.ember-view").querySelector("span.strong").textContent;
 
