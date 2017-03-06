@@ -1,11 +1,18 @@
 //this script should communicate with our native client.
 
+var handled = [];
+
 /* To observe the new messages, we need to use a MutationObserver
 * and then apply a queryselector to get the new message added:
 we're looking for: <li class="message-line chat-line ember-view"> */
     var port = chrome.runtime.connect({name: "handler"});
     port.onMessage.addListener(function(message){
-        console.log(message);
+        var data = message.split("|");
+        var target_msg = document.getElementById(data[0]);
+        handled.push(data[0]);
+        if(data[3] == "0") //TODO: Non-relevant display CONFIGURE BY POPup
+            target_msg.setAttribute("hidden", true);
+        
     });
 
     //need to fix this first.
@@ -73,5 +80,6 @@ we're looking for: <li class="message-line chat-line ember-view"> */
         var user = element.querySelector("span.from").textContent
         var message = element.querySelector("span.message").textContent.trim()
         var identifier = element.id
-        port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
+        if(handled.includes(identifier) == false)
+            port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
     });

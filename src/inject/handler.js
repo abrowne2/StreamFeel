@@ -20,7 +20,6 @@ function moduleDidLoad() {
 
 //called by common.js when native client responds.
 function handleMessage(message) {
-    console.log(message.data)
     ref.postMessage(message.data);
 }
 

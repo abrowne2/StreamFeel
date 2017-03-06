@@ -4,3 +4,4 @@ icons/
 _locales/
 src/page_action
 src/inject/common.js
+pnacl/Release/background.html
