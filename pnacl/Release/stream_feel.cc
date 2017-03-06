@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <queue>
 
+/*10:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
@@ -59,14 +60,14 @@ struct relevanceClassifier {
 		drelevant = fit.train();
 	}
 	
-	std::string isRelevant(std::string& message){
+	bool isRelevant(std::string& message){
 		//get our tokens to predict if a msg is relevant.
-		auto token = tokenize_msg(message);
-		std::string tag;
+		std::vector<std::string> tokenized = tokenize_msg(message);
+		std::string tag = "";
 		double confidence;
-		drelevant.predict(token, tag, confidence);
-		std::string returner = "tag: " + tag + " ,confidence: " + to_string(confidence);
-		return returner;
+		drelevant.predict(tokenized, tag, confidence);
+		while(tag == "") { } //do nothing until prediction formed.
+		return tag == "y"? true: false;
 	}
 };
 
@@ -169,11 +170,25 @@ class StreamFeelModInstance : public pp::Instance {
     }
 	//get the string message and parse it.
 	std::string message = var_message.AsString();
-	//test our parser:
 	StreamMessage parsed = StreamMessage(message, current_user);
-	std::string relevant = RC.isRelevant(parsed.msg);
-	// make a reply using:
-	pp::Var var_reply(relevant);
+     // ID | Time | From | Rel | Usr | Msg  <-- Response Format
+	std::string response = parsed.id + "|" + parsed.time + "|" + parsed.user + "|";
+	//if the sfeel user was mentioned here...
+	if(parsed.userMentioned == true) {
+		bool relevant = RC.isRelevant(parsed.msg);
+		response += (relevant == true? "1|": "0|");
+		//COMPUTE THE SENTIMENT NEXT.
+	} else {
+		if(parsed.cmdMsg == true) //we assume commands aren't relevant.
+			response += "0|";
+		else {
+			bool relevant = RC.isRelevant(parsed.msg);
+			response += (relevant == true? "1|": "0|");
+			//COMPUTE SENTIMENT HERE.
+		}
+	}
+	response += ("|" + parsed.msg);	 //lastly, append the msg.
+	pp::Var var_reply(response);
 	//post the msg using PostMessage(var_reply) ^^
 	PostMessage(var_reply);
   }
