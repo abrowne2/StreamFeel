@@ -5,9 +5,9 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <queue>
+#include <cstring>
+#include <bitset>
 
-/*10:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
@@ -16,12 +16,9 @@
 #include "mitie/mitie/text_categorizer_trainer.h"
 
 
-//NOTE TO SELF:
-//WHEN PREDICTING, IF THE MODEL HAS NOT BEEN ˇRAINED YET,
-//MAKE SURE THAT WE STORE ALL MESSAGES IN A QUEUE SO THAT THEY CAN ACCESSED PROMPLTY.
-
 //we're using MIT's Information Extraction Library / Tool(s)
 using namespace mitie;
+using namespace dlib;
 
 struct relevanceClassifier {
 	//text categorizer to determine relevance.
@@ -43,21 +40,22 @@ struct relevanceClassifier {
 		return tokens;
 	}
 
-	void train(pp::VarArray& message){
-		//we're going to assign our categorizer to this after
-		text_categorizer_trainer fit;
-		int i = 0, data_size = message.GetLength();
-		//build our BoW (bag of words categorizer)
-		while(i < data_size - 1){
-			std::string curMessage = message.Get(i).AsString();
-			//relevant => "y" ; not relevant => "n"
-			std::string rel_label = message.Get(i+1).AsString();
-			fit.add(tokenize_msg(curMessage),rel_label);
-			i += 2; //because of the format, we increment by 2.
+	/* We're receiving the entire trained model as binary.
+	 * We parse the binary into it's representation, create a 
+	 * vectorstream and decode the stream into the categorizer. */
+	void buildCategorizer(pp::VarArray& data){
+		int index = 0, size = data.GetLength();
+		std::vector<char> buffer;
+		buffer.reserve(size/2);
+		while(index < size){
+			char byte = data.Get(index).AsInt();
+			buffer.push_back(byte);
+			++index;
 		}
-		fit.set_num_threads(4); //experimental...
-		//train the categorizer.
-		drelevant = fit.train();
+		dlib::vectorstream trained_model(buffer);
+		//decode the serialized stream and the categorizer is built.
+		drelevant.decode(drelevant,trained_model);
+		buffer.clear();
 	}
 	
 	bool isRelevant(std::string& message){
@@ -161,7 +159,7 @@ class StreamFeelModInstance : public pp::Instance {
       if(var_message.is_array()){
 		auto val = pp::VarArray(var_message);
 		//loads our containers and trains the classifier.
-		RC.train(val);
+		RC.buildCategorizer(val);
 		std::string complete = "Train complete";
       	pp::Var reply(complete);
       	PostMessage(reply);
