@@ -85,8 +85,18 @@ std::vector<char> serialize(char choice) {
 }
 
 
+void readRecord(std::string& msg, std::string& label, const std::string& lbl) {
+	std::cout << "Enter message:\n"; 
+	std::cin.ignore();
+	std::getline(std::cin,msg);
+	std::cout << lbl;
+	std::cin >> label;
+	//need the delimeter ',': can't confuse it.
+	msg.erase(std::remove(msg.begin(), msg.end(), ','), msg.end());
+}
+
 void addRecord(char choice) {
-	std::string file, lbl;
+	std::string file, lbl, msg, label;
 	if(choice == 'r'){
 		lbl = "Relevant (y/n):\n";
 		file = "relevance.txt";
@@ -97,16 +107,8 @@ void addRecord(char choice) {
 	//open the dataset for appending because we're adding another record.	
 	std::ofstream fileWriter;
 	fileWriter.open(file, std::ios_base::app);
-	//take the input for the message / label	
-	std::string msg, label;
-	std::cout << "Enter message:\n";
-	std::cin.ignore();
-	std::getline(std::cin,msg);
-	std::cout << lbl;
-	std::cin >> label;
-	//need the delimeter ',': can't confuse it.
-	msg.erase(std::remove(msg.begin(), msg.end(), ','), msg.end());
 	//append the new record to the dataset.
+	readRecord(msg,label,lbl);
 	std::string new_msg = "," + msg + "," + label;
 	fileWriter << new_msg;
 	std::cout << "Added " << msg << "," << label << std::endl;
