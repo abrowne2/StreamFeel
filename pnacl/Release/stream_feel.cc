@@ -61,11 +61,8 @@ struct relevanceClassifier {
 	bool isRelevant(std::string& message){
 		//get our tokens to predict if a msg is relevant.
 		std::vector<std::string> tokenized = tokenize_msg(message);
-		std::string tag = "";
-		double confidence;
-		drelevant.predict(tokenized, tag, confidence);
-		while(tag == "") { } //do nothing until prediction formed.
-		return tag == "y"? true: false;
+		std::string tag = drelevant(tokenized);
+		return tag == "y";
 	}
 };
 
