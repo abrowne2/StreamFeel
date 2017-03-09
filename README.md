@@ -1,6 +1,4 @@
 # StreamFeel - Twitch chat analytics &amp; more
-
-# What is StreamFeel?
 StreamFeel is a chrome browser extension intended to solve twitch chat's incomprehensible minefield, where it's nearly impossible to hold a conversation or see what people are saying at large volumes. It uses machine learning: specifically multiclass linear SVM classification as well as natural language processing (sentimental analysis) using MITIE (MIT's Information Extraction Tools / Library) which is built on top of dlib, a high performance machine learning library (verbatim: https://github.com/mit-nlp/MITIE). This allows StreamFeel to filter out garbage and see what people are saying (and what they feel).
 
 
