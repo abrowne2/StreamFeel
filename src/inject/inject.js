@@ -22,6 +22,8 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     // .querySelector("div.ember-view").querySelector("span.strong").textContent;
 
     console.log(streamfeel_user);
+
+
     //below is some mutation observer hack to listen for dom element updates:
     //credit Ryan Morr @ http://ryanmorr.com/using-mutation-observers-to-watch-for-element-availability/
      (function(win) {
@@ -52,11 +54,11 @@ we're looking for: <li class="message-line chat-line ember-view"> */
             
         function check() {
             // Check the DOM for elements matching a stored selector
-            for (var i = 0, len = listeners.length, listener, elements; i < len; i++) {
+            for (var i = 0, len = listeners.length, listener, elements; i < len; ++i) {
                 listener = listeners[i];
                 // Query for elements matching the specified selector
                 elements = doc.querySelectorAll(listener.selector);
-                for (var j = 0, jLen = elements.length, element; j < jLen; j++) {
+                for (var j = 0, jLen = elements.length, element; j < jLen; ++j) {
                     element = elements[j];
                     // Make sure the callback isn't invoked with the 
                     // same element more than once
