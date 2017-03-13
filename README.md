@@ -8,19 +8,19 @@ StreamFeel is a chrome browser extension intended to solve twitch chat's incompr
 
 It uses a form of machine learning: specifically multiclass linear SVM classification as well as natural language processing (sentimental analysis) using MITIE (MIT's Information Extraction Tools / Library) which is built on top of dlib, a high performance machine learning library (verbatim: https://github.com/mit-nlp/MITIE). 
 
-### Main files;
-* stream_feel.cc (pnacl/Release)
+### Important files
+* **stream_feel.cc** (pnacl/Release)
 ---> NLP, Native Client, Computation
-* streamfeelutil.cpp (/) 
+* **streamfeelutil.cpp** (/) 
 ---> Utility to update (serialize) dataset for
 the native client module to use for classification
-* inject.js (src/inject)
+* **inject.js** (src/inject)
 ---> Code injected into stream's page to manipulate twitch chat
-* handler.js (src/inject)
+* **handler.js** (src/inject)
 ---> Connected to inject.js & native client (which is embedded in a background page). Middleman between content script and the native client.
-* default.js (src/inject) 
+* **default.js** (src/inject) 
 ---> Raw relevance dataset.
-* sentiment.js (src/inject)
+* **sentiment.js** (src/inject)
 ---> Raw sentiment dataset.
 
 ### Technical Challenges Addressed
