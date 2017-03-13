@@ -10,18 +10,18 @@ It uses a form of machine learning: specifically multiclass linear SVM classific
 
 ### Important files
 * **stream_feel.cc** (pnacl/Release)
----> NLP, Native Client, Computation
+: NLP, Native Client, Computation
 * **streamfeelutil.cpp** (/) 
----> Utility to update (serialize) dataset for
+: Utility to update (serialize) dataset for
 the native client module to use for classification
 * **inject.js** (src/inject)
----> Code injected into stream's page to manipulate twitch chat
+: Code injected into stream's page to manipulate twitch chat
 * **handler.js** (src/inject)
----> Connected to inject.js & native client (which is embedded in a background page). Middleman between content script and the native client.
+: Connected to inject.js & native client (which is embedded in a background page). Middleman between content script and the native client.
 * **default.js** (src/inject) 
----> Raw relevance dataset.
+: Raw relevance dataset.
 * **sentiment.js** (src/inject)
----> Raw sentiment dataset.
+: Raw sentiment dataset.
 
 ### Technical Challenges Addressed
 * Porting MITIE to PNaCl by getting it to compile and link with PNaCl's tools statically and addressing other issues with it
