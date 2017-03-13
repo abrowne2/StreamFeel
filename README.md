@@ -15,7 +15,9 @@ It uses a form of machine learning: specifically multiclass linear SVM classific
 ---> Utility to update (serialize) dataset for
 the native client module to use for classification
 * inject.js (src/inject)
+---> Code injected into stream's page to manipulate twitch chat
 * handler.js (src/inject)
+---> Connected to inject.js & native client (which is embedded in a background page). Middleman between content script and the native client.
 * default.js (src/inject) 
 ---> Raw relevance dataset.
 * sentiment.js (src/inject)
