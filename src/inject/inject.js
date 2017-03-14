@@ -83,16 +83,20 @@ we're looking for: <li class="message-line chat-line ember-view"> */
         //we have access to the element here.
         ready(node, function(element) {
             //better twitch tv compatibility.
-            var timestamp = element.querySelector("span.timestamp").textContent
-            var user = element.querySelector("span.from").textContent
-            var message = element.querySelector("span.message").textContent.trim()
-            var identifier = node != "div.chat-line"? element.id: element.getAttribute("data-id");
-            // re-handle guard w/ better ttv compatibility.
-            if(handled.includes(identifier) == false) {
-                handled.push(identifier);
-                if(node == "div.chat-line")
-                    element.setAttribute("id", identifier);
-                port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
+            try {
+                var timestamp = element.querySelector("span.timestamp").textContent
+                var user = element.querySelector("span.from").textContent
+                var message = element.querySelector("span.message").textContent.trim()
+                var identifier = node != "div.chat-line"? element.id: element.getAttribute("data-id");
+                // re-handle guard w/ better ttv compatibility.
+                if(handled.includes(identifier) == false) {
+                    handled.push(identifier);
+                    if(node == "div.chat-line")
+                        element.setAttribute("id", identifier);
+                    port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
+                }
+            } catch(err) {
+                //do nothing.
             }
         });
     }
