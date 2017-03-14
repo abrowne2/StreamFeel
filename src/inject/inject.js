@@ -1,5 +1,4 @@
-//this script should communicate with our native client.
-
+// array used to store handled messages and msg_node for better ttv compatibility.
 var handled = [];
 
 /* To observe the new messages, we need to use a MutationObserver
@@ -9,10 +8,14 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     port.onMessage.addListener(function(message){
         var data = message.split("|");
         var target_msg = document.getElementById(data[0]);
-        handled.push(data[0]);
-        if(data[3] == "0") //TODO: Non-relevant display CONFIGURE BY POPup
-            target_msg.setAttribute("hidden", true);
-        
+        if(data[3] == "0") {//TODO: Non-relevant display CONFIGURE BY POPup
+            try {
+                target_msg.setAttribute("hidden", true);
+            } 
+            catch(err){
+                //do nothing.
+            }
+        }
     });
 
     //need to fix this first.
@@ -76,12 +79,24 @@ we're looking for: <li class="message-line chat-line ember-view"> */
                 
     })(this);
 
-    //we have access to the element here.
-    ready('li.message-line.chat-line.ember-view', function(element) {
-        var timestamp = element.querySelector("span.timestamp.float-left").textContent
-        var user = element.querySelector("span.from").textContent
-        var message = element.querySelector("span.message").textContent.trim()
-        var identifier = element.id
-        if(handled.includes(identifier) == false)
-            port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
-    });
+    var observeMessages = function(node) {
+        //we have access to the element here.
+        ready(node, function(element) {
+            //better twitch tv compatibility.
+            var timestamp = element.querySelector("span.timestamp").textContent
+            var user = element.querySelector("span.from").textContent
+            var message = element.querySelector("span.message").textContent.trim()
+            var identifier = node != "div.chat-line"? element.id: element.getAttribute("data-id");
+            // re-handle guard w/ better ttv compatibility.
+            if(handled.includes(identifier) == false) {
+                handled.push(identifier);
+                if(node == "div.chat-line")
+                    element.setAttribute("id", identifier);
+                port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
+            }
+        });
+    }
+
+    //better twitch tv compatibility. we can afford two listeners.
+    observeMessages("div.chat-line");
+    observeMessages("li.message-line.chat-line.ember-view");
