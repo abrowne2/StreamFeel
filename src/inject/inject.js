@@ -1,6 +1,13 @@
 // array used to store handled messages and msg_node for better ttv compatibility.
 var handled = [];
 
+/* What we need now:
+ * an interface to render the charts;
+ * button next to settings to open them up;
+ * they should be draggable and closable. */
+
+
+
 /* To observe the new messages, we need to use a MutationObserver
 * and then apply a queryselector to get the new message added:
 we're looking for: <li class="message-line chat-line ember-view"> */
@@ -104,3 +111,25 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     //better twitch tv compatibility. we can afford two listeners.
     observeMessages("div.chat-line");
     observeMessages("li.message-line.chat-line.ember-view");
+// var tester = false, pie;
+// ready("div.mg-b-2", function(element){
+//     if(tester == false){
+//         pie = new d3pie(element, {
+//             header: {
+//                 title: {
+//                     text: "A very simple example pie"
+//                 }
+//             },
+//             data: {
+//                 content: [
+//                     { label: "JavaScript", value: 264131 },
+//                     { label: "Ruby", value: 218812 },
+//                     { label: "Java", value: 157618},
+//                 ]
+//             }
+//         });
+//         tester = true;
+//         pie.redraw();
+//     }
+// });
+
