@@ -1,13 +1,6 @@
 // array used to store handled messages and msg_node for better ttv compatibility.
 var handled = [];
 
-/* What we need now:
- * an interface to render the charts;
- * button next to settings to open them up;
- * they should be draggable and closable. */
-
-
-
 /* To observe the new messages, we need to use a MutationObserver
 * and then apply a queryselector to get the new message added:
 we're looking for: <li class="message-line chat-line ember-view"> */
@@ -85,6 +78,26 @@ we're looking for: <li class="message-line chat-line ember-view"> */
         win.ready = ready;
                 
     })(this);
+
+//1 Get js-chat-settings element.
+//2 Get child chat-menu-content
+//3 create paragraph tag element
+//4 append child to chat-menu-content
+//profit
+    var setupDataInterface = function(node){
+        ready(node, function(element) {
+            var build = element.querySelector("div.chat-menu-content");
+            var button = document.createElement("a");
+            var img = document.createElement("img");
+            img.src = chrome.runtime.getURL("dataico.png");
+            var label = document.createTextNode(" StreamFeel Analytics");
+            button.appendChild(img);
+            button.appendChild(label);
+            build.appendChild(button);
+        });
+    }
+
+    setupDataInterface("div.js-chat-settings");
 
     var observeMessages = function(node) {
         //we have access to the element here.
