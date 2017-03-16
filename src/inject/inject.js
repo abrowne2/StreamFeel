@@ -1,6 +1,3 @@
-// array used to store handled messages and msg_node for better ttv compatibility.
-var handled = [];
-
 /* To observe the new messages, we need to use a MutationObserver
 * and then apply a queryselector to get the new message added:
 we're looking for: <li class="message-line chat-line ember-view"> */
@@ -11,9 +8,8 @@ we're looking for: <li class="message-line chat-line ember-view"> */
         if(data[3] == "0") {//TODO: Non-relevant display CONFIGURE BY POPup
             try {
                 target_msg.setAttribute("hidden", true);
-            } 
-            catch(err){
-                //do nothing.
+            } catch(err){
+
             }
         }
     });
@@ -24,106 +20,81 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     // streamfeel_user = streamfeel_user.querySelector(".chat-menu-content")
     // .querySelector("div.ember-view").querySelector("span.strong").textContent;
 
-    console.log(streamfeel_user);
+    var handleTwitchMsg = function(msg) {
+        var timestamp = msg.querySelector("span.timestamp").textContent
+        var user = msg.querySelector("span.from").textContent
+        var message = msg.querySelector("span.message").textContent.trim()
+        var identifier = msg.id;
+        port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
+    }
 
-
-    //below is some mutation observer hack to listen for dom element updates:
-    //credit Ryan Morr @ http://ryanmorr.com/using-mutation-observers-to-watch-for-element-availability/
-     (function(win) {
-        'use strict';
-        
-        var listeners = [], 
-        doc = win.document, 
-        MutationObserver = win.MutationObserver || win.WebKitMutationObserver,
-        observer;
-        
-        function ready(selector, fn) {
-            // Store the selector and callback to be monitored
-            listeners.push({
-                selector: selector,
-                fn: fn
-            });
-            if (!observer) {
-                // Watch for changes in the document
-                observer = new MutationObserver(check);
-                observer.observe(doc.documentElement, {
-                    childList: true,
-                    subtree: true
-                });
-            }
-            // Check if the element is currently in the DOM
-            check();
+    var getChatBoxElement = function() {
+        if(document.querySelector("ul.chat-lines") != null){
+            setupMessageListener(document.querySelector("ul.chat-lines"));
+        } else {
+            setTimeout(function() {
+                getChatBoxElement();
+            }, 500);
         }
-            
-        function check() {
-            // Check the DOM for elements matching a stored selector
-            for (var i = 0, len = listeners.length, listener, elements; i < len; ++i) {
-                listener = listeners[i];
-                // Query for elements matching the specified selector
-                elements = doc.querySelectorAll(listener.selector);
-                for (var j = 0, jLen = elements.length, element; j < jLen; ++j) {
-                    element = elements[j];
-                    // Make sure the callback isn't invoked with the 
-                    // same element more than once
-                    if (!element.ready) {
-                        element.ready = true;
-                        // Invoke the callback with the element
-                        listener.fn.call(element, element);
+    }
+    var handled = [];
+    /* to setup the message listener, we have to first get the "ul.chat-lines" element.
+     * this is added dynamically, so we'll use a mutation observer to get it, disconnect that observer,
+     * and then begin listening to chat messages. */
+    var setupMessageListener = function(chat_box) {
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                for(var i = 0; i < mutation.addedNodes.length; ++i){
+                    var newTwitchMsg = mutation.addedNodes[i], identifier;
+                    var isValid = true;
+                    if(newTwitchMsg.id != "undefined" && newTwitchMsg.id != ""){
+                        identifier = newTwitchMsg.id;
+                    } else {
+                        identifier = newTwitchMsg.getAttribute("data-id");
+                        isValid = false;
+                    }                
+                    if(handled.includes(identifier) == false){
+                        handled.push(identifier);
+                        if(isValid == false)
+                            newTwitchMsg.setAttribute("id", identifier);
+                        handleTwitchMsg(newTwitchMsg);
                     }
                 }
-            }
+            })
+        });
+        //listen for new chat messages. We've incorporated BTTV compatibility.
+        observer.observe(chat_box, {childList: true});
+    }
+
+    var oldStream = "";
+    var curStream = window.location.href;
+    function checkChangedStream(curStream){
+        if(curStream != oldStream){
+            oldStream = curStream;
+            getChatBoxElement();
         }
-
-        // Expose `ready`
-        win.ready = ready;
-                
-    })(this);
-
-//1 Get js-chat-settings element.
-//2 Get child chat-menu-content
-//3 create paragraph tag element
-//4 append child to chat-menu-content
-//profit
-    var setupDataInterface = function(node){
-        ready(node, function(element) {
-            var build = element.querySelector("div.chat-menu-content");
-            var button = document.createElement("a");
-            var img = document.createElement("img");
-            img.src = chrome.runtime.getURL("dataico.png");
-            var label = document.createTextNode(" StreamFeel Analytics");
-            button.appendChild(img);
-            button.appendChild(label);
-            build.appendChild(button);
-        });
+        oldStream = window.location.href;
+        setTimeout(function() {
+            checkChangedStream(window.location.href);
+        }, 2000);
     }
 
-    setupDataInterface("div.js-chat-settings");
+    checkChangedStream();
 
-    var observeMessages = function(node) {
-        //we have access to the element here.
-        ready(node, function(element) {
-            //better twitch tv compatibility.
-            try {
-                var timestamp = element.querySelector("span.timestamp").textContent
-                var user = element.querySelector("span.from").textContent
-                var message = element.querySelector("span.message").textContent.trim()
-                var identifier = node != "div.chat-line"? element.id: element.getAttribute("data-id");
-                // re-handle guard w/ better ttv compatibility.
-                if(handled.includes(identifier) == false) {
-                    handled.push(identifier);
-                    if(node == "div.chat-line")
-                        element.setAttribute("id", identifier);
-                    port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
-                }
-            } catch(err) {
-                //do nothing.
-            }
-        });
-    }
+    // var setupDataInterface = function(node){
+    //     ready(node, function(element) {
+    //         var build = element.querySelector("div.chat-menu-content");
+    //         var button = document.createElement("a");
+    //         var img = document.createElement("img");
+    //         img.src = chrome.runtime.getURL("dataico.png");
+    //         var label = document.createTextNode(" StreamFeel Analytics");
+    //         button.appendChild(img);
+    //         button.appendChild(label);
+    //         build.appendChild(button);
+    //     });
+    // }
 
-    //better twitch tv compatibility. we can afford two listeners.
-    observeMessages("div.chat-line");
-    observeMessages("li.message-line.chat-line.ember-view");
+    // setupDataInterface("div.js-chat-settings");
 // var tester = false, pie;
 // ready("div.mg-b-2", function(element){
 //     if(tester == false){

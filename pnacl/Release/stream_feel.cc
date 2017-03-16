@@ -23,10 +23,21 @@ using namespace dlib;
 struct relevanceClassifier {
 	//text categorizer to determine relevance.
 	text_categorizer drelevant;
-		
+
+	static bool checkSpaces(char left, char right) 
+		{ return (left == right) && (left == ' '); }
+
+	void simplifyString(std::string& input){
+		//then, reduce multiple spaces into one between each valid character.
+		if(input.find(' ') != std::string::npos) {    
+			auto badspace = std::unique(input.begin(), input.end(), checkSpaces);
+			input.erase(badspace, input.end());
+		}
+	}		
 	/* In order to categorize a msg, we must first tokenize it.
 	 * this helper function does that by parsing spaces. */
 	std::vector<std::string> tokenize_msg(std::string& input){
+		simplifyString(input);
 		std::vector<std::string> tokens;
 		tokens.reserve(input.size());
 		int curSpace = input.find(" "), curPos = 0;
