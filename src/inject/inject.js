@@ -1,3 +1,6 @@
+/* Copyright (c) 2017 Adam Browne
+ * Inject.js is the content script which analyzes twitch. */
+
 /* To observe the new messages, we need to use a MutationObserver
 * and then apply a queryselector to get the new message added:
 we're looking for: <li class="message-line chat-line ember-view"> */
@@ -5,9 +8,9 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     port.onMessage.addListener(function(message){
         var data = message.split("|");
         var target_msg = document.getElementById(data[0]);
-        if(data[3] == "0") {//TODO: Non-relevant display CONFIGURE BY POPup
+        if(data[3] == "1") {//TODO: Non-relevant display CONFIGURE BY POPup
             try {
-                target_msg.setAttribute("hidden", true);
+                target_msg.setAttribute("style", "display:block;visibility:visible;");
             } catch(err){
 
             }
@@ -37,6 +40,7 @@ we're looking for: <li class="message-line chat-line ember-view"> */
             }, 500);
         }
     }
+
     var handled = [];
     /* to setup the message listener, we have to first get the "ul.chat-lines" element.
      * this is added dynamically, so we'll use a mutation observer to get it, disconnect that observer,
@@ -47,15 +51,15 @@ we're looking for: <li class="message-line chat-line ember-view"> */
                 for(var i = 0; i < mutation.addedNodes.length; ++i){
                     var newTwitchMsg = mutation.addedNodes[i], identifier;
                     var isValid = true;
-                    if(newTwitchMsg.id != "undefined" && newTwitchMsg.id != ""){
+                    if(newTwitchMsg.id != "undefined" && newTwitchMsg.id != ""){ //native twitch
                         identifier = newTwitchMsg.id;
                     } else {
-                        identifier = newTwitchMsg.getAttribute("data-id");
+                        identifier = newTwitchMsg.getAttribute("data-id"); //better twitch tv
                         isValid = false;
                     }                
                     if(handled.includes(identifier) == false){
                         handled.push(identifier);
-                        if(isValid == false)
+                        if(isValid == false) //better twitch tv compatibility
                             newTwitchMsg.setAttribute("id", identifier);
                         handleTwitchMsg(newTwitchMsg);
                     }

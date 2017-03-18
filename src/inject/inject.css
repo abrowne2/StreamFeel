@@ -1,3 +1,25 @@
-/**
- * Place your custom CSS styles here.
- **/
+/* style all subsequent messages to be hidden when they appear. 
+ * this is intended to fix the weird flicker render when messages dealt with. */
+
+
+/*better twitch tv message*/
+div.chat-line {
+	display: none;
+	visibility: hidden;
+}
+
+/*better twitch tv admin msg*/
+div.chat-line.admin {
+	display: block;
+	visibility: visible;
+}
+
+li.message-line.chat-line {
+	display: none;
+	visibility: hidden;
+}
+
+li.message-line.chat-line.special-message {
+	display: block;
+	visibility: visible;
+}
