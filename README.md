@@ -33,6 +33,7 @@ the native client module to use for classification
 * Porting MITIE to PNaCl by getting it to compile and link with PNaCl's tools statically and addressing other issues with it
 * Allowing for a persistent categorizer model (once we've trained our dataset), by observing the nature of 'compute_fingerprint' in mitie/text_categorizer.h. This allowed for a dlib::vectorstream to take a buffer and then deserialize it, preventing the categorizer retrain everytime (bad for user)
 * Making StreamFeel compatible with Better TwitchTV, another popular extension.
+* Fixing message flickering/rendering
 * Listening to twitch messages and parsing them, making conclusions about them.
 * Building a good Dataset (really important)
 
