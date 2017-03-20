@@ -76,7 +76,7 @@ we're looking for: <li class="message-line chat-line ember-view"> */
                                 curMsg.setAttribute("id", curMsg.getAttribute("data-id"));
                             need.push(curMsg.id);
                         } catch(err) { }
-	                }
+                    }
                 }
             })
         });
