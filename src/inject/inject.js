@@ -70,14 +70,12 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 	                    }
 	                } else {
 						try {
-							var curMsg = mutation.addedNodes[i];
-							curMsg.setAttribute("style", "display:block;visibility:visible;");
+                            var curMsg = mutation.addedNodes[i];
+                            curMsg.setAttribute("style", "display:block;visibility:visible;");
                             if(curMsg.id == "" || curMsg.id == "undefined")
                                 curMsg.setAttribute("id", curMsg.getAttribute("data-id"));
-                            need.push(curMsg.id);                                
-						} catch(err){
-							//do nothing
-						}
+                            need.push(curMsg.id);
+                        } catch(err) { }
 	                }
                 }
             })
