@@ -69,7 +69,7 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 	                        handleTwitchMsg(newTwitchMsg);
 	                    }
 	                } else {
-						try {
+                        try {
                             var curMsg = mutation.addedNodes[i];
                             curMsg.setAttribute("style", "display:block;visibility:visible;");
                             if(curMsg.id == "" || curMsg.id == "undefined")
