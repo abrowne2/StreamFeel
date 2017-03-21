@@ -10,7 +10,7 @@ It uses a form of machine learning: specifically multiclass linear SVM classific
 
 Additionally, for data visualization;
 * **d3.js**
-(Copyright 2010-2016 Mike Bostock, All rights reserved)
+(Copyright 2010-2016 Mike Bostock)
 * **d3pie**
 (Copyright (c) 2014-2015 Benjamin Keen)
 
