@@ -59,14 +59,13 @@ std::vector<std::string> dataset(char which){
 	return split(raw);
 }
 
+/* Serialize works by pulling the existing dataset, subsequently training it,
+ * then serializing (encodes) the data to the vector stream and returning its' buffer */
 std::vector<char> serialize(char choice) {
-    //the executor we're using to encode our dataset.
     text_categorizer executor;
-    //pull the dataset from the file.
     std::vector<std::string> data = dataset(choice);
     text_categorizer_trainer fit;
     int i = 0, invariant = data.size() - 1;
-    //add the <msg,label> pair to the trainer.
     while(i < invariant){
         std::string label = data[i+1];
         std::string msg = data[i];
@@ -76,8 +75,6 @@ std::vector<char> serialize(char choice) {
     }
     fit.set_num_threads(4);
     executor = fit.train();
-    //here, we use a vectorstream to serialize the categorizer.
-    //the serialized buffer is present in buf afterwards.
     std::vector<char> buf;
     dlib::vectorstream strm(buf);
     executor.encode(executor,strm);
