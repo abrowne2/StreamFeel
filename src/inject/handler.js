@@ -7,7 +7,7 @@ chrome.runtime.onConnect.addListener(function(port) {
     port.onMessage.addListener(function(msg){
         //format id | time | usr | message
         //send over the data to the naclmodule, where we'll derive relevance/conclusions.
-        common.naclModule.postMessage(msg['id']+'|'+msg['time']+'|'+msg['usr']+'|'+msg['data']);
+		common.naclModule.postMessage(msg['id']+'|'+msg['time']+'|'+msg['usr']+'|'+msg['data']);
     });
 });
 
@@ -24,19 +24,20 @@ function moduleDidLoad() {
 
 //called by common.js when native client responds.
 function handleMessage(message) {
-    if(message == "f") //native client wants second chunk now.
+    console.log(message.data);
+    if(message.data == "f") //native client wants second chunk now.
     	common.naclModule.postMessage(secoSentChunk());
     ref.postMessage(message.data);
 }
 
 function trainRelevance() {
-	return ["0"].concat(relevance_data);
+	return relevance_data;
 }
 
 function firstSentChunk() {
-	return ["1"].concat(sentiment);
+	return sentiment;
 }
 
 function secoSentChunk() {
-	return ["2"].concat(sentiment2);
+	return sentiment2;
 }

@@ -134,7 +134,7 @@ void segmentData(std::vector<char>& buffer, std::string& updated_data, char choi
 			updated_data += (to_string(byte) + ",");
 		}
 		updated_data.pop_back();
-		updated_data += "\n];\n\nvar sentiment2 = [\n";
+		updated_data += "\n];\n\nvar sentiment2 = [\n2,";
 		for(int i = buffer.size() / 2; i < buffer.size(); ++i){
 			int byte = buffer[i];
 			updated_data += (to_string(byte) + ",");
@@ -152,10 +152,10 @@ void updateDataset(char choice){
 	std::vector<char> buffer = serialize(choice);
 	std::string var_name, file_name;
 	if(choice == 'r'){
-		var_name = "relevance_data = [\n";
+		var_name = "relevance_data = [\n0,";
 		file_name = "/Users/adambrowne/Desktop/Personal/StreamFeel/src/inject/default.js";
 	} else {
-		var_name = "sentiment = [\n";
+		var_name = "sentiment = [\n1,";
 		file_name = "/Users/adambrowne/Desktop/Personal/StreamFeel/src/inject/sentiment.js";
 	}
 	std::string updated_data = "var " + var_name;

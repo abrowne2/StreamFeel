@@ -7,9 +7,6 @@
 #include <algorithm>
 #include <cstring>
 
-
-/*11:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
-/*12:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
@@ -25,7 +22,6 @@ using namespace dlib;
 struct dataClassifier {
 	//categorizers for sentiment and relevance.
 	text_categorizer drelevant, sentiment; 
-	std::vector<char> sent_buffer;
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -54,39 +50,38 @@ struct dataClassifier {
 		return tokens;
 	}
 
-	/* We're receiving the entire trained model as binary.
-	 * We parse the binary into it's representation, create a 
-	 * vectorstream and decode the stream into the categorizer. */
-	void buildCategorizer(pp::VarArray& data, int inst_id){
-		auto inst = pp::Instance(inst_id); 
-		int choice = data.Get(0).AsInt();
-		if(choice == 0){
-			std::vector<char> buffer;
-			buildBuffer(data, buffer);
-			decodeStream('r',buffer);
-		} else if(choice == 1){
-			buildBuffer(data,sent_buffer);
-			inst.PostMessage(pp::Var("f")); //tells them to send second chunk.
-		} else if(choice == 2){
-			buildBuffer(data,sent_buffer);
-			decodeStream('s',sent_buffer);
-		}
-	}
-
 	void buildBuffer(pp::VarArray& data, std::vector<char>& buffer){
-		int index = 1, size = data.GetLength() - 1;
-		buffer.reserve(size / 2);
-		while(index <= size){
+		int index = 1, size = data.GetLength();
+		while(index < size){
 			char byte = data.Get(index).AsInt();
 			buffer.push_back(byte);
 			++index;
 		}
 	}
 
-	void decodeStream(char part, std::vector<char>& buffer){
-		dlib::vectorstream trained_model(buffer);
+	/* We're receiving the entire trained model as binary.
+	 * We parse the binary into it's representation, create a 
+	 * vectorstream and decode the stream into the categorizer. */
+	void buildCategorizer(pp::VarArray& data, std::vector<char>& buf, int inst_id){
+		auto inst = pp::Instance(inst_id); 
+		int choice = data.Get(0).AsInt();
+		if(choice == 0){
+			buildBuffer(data, buf);
+			decodeStream('r',buf);
+		} else if(choice == 1){
+			buildBuffer(data,buf);
+			inst.PostMessage(pp::Var("f")); //tells them to send second chunk.
+		} else if(choice == 2){
+			buildBuffer(data,buf);
+			decodeStream('s',buf);
+		}
+	}
+
+
+	void decodeStream(char part, std::vector<char>& cont){
+		dlib::vectorstream trained_model(cont);
 		deserialize(trained_model,part);
-		buffer.clear();
+		cont.clear();
 	}
 
 	void deserialize(dlib::vectorstream& trained_model, char ch){
@@ -115,6 +110,7 @@ struct dataClassifier {
 namespace {
 	//we're going to use this to classify text as relevant or it's sentiment.
 	dataClassifier RC;
+	std::vector<char> cat_buf;
 	std::string current_user;
 }  // namespace
 
@@ -202,7 +198,7 @@ class StreamFeelModInstance : public pp::Instance {
       	int inst_id = pp_instance();
 		auto val = pp::VarArray(var_message);
 		//loads our containers and trains the classifier.
-		RC.buildCategorizer(val,inst_id);
+		RC.buildCategorizer(val,cat_buf,inst_id);
       }
       return;
     }
