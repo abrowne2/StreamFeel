@@ -6,9 +6,9 @@
 #include <string>
 #include <algorithm>
 #include <cstring>
-#include <bitset>
 
 
+/*11:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 /*12:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
@@ -25,8 +25,7 @@ using namespace dlib;
 struct dataClassifier {
 	//categorizers for sentiment and relevance.
 	text_categorizer drelevant, sentiment; 
-	std::vector<char> sent_buffer, sec_sent;
-	bool secondChunk = false; 
+	std::vector<char> sent_buffer;
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -58,7 +57,8 @@ struct dataClassifier {
 	/* We're receiving the entire trained model as binary.
 	 * We parse the binary into it's representation, create a 
 	 * vectorstream and decode the stream into the categorizer. */
-	void buildCategorizer(pp::VarArray& data){
+	void buildCategorizer(pp::VarArray& data, int inst_id){
+		auto inst = pp::Instance(inst_id); 
 		int choice = data.Get(0).AsInt();
 		if(choice == 0){
 			std::vector<char> buffer;
@@ -66,13 +66,10 @@ struct dataClassifier {
 			decodeStream('r',buffer);
 		} else if(choice == 1){
 			buildBuffer(data,sent_buffer);
-			if(sec_sent.size() > 0 && secondChunk == true){
-				std::move(sec_sent.begin(), sec_sent.end(), std::back_inserter(sent_buffer));
-				decodeStream('s',sent_buffer);
-			}
+			inst.PostMessage(pp::Var("f")); //tells them to send second chunk.
 		} else if(choice == 2){
-			buildBuffer(data,sec_sent);
-			secondChunk = true;
+			buildBuffer(data,sent_buffer);
+			decodeStream('s',sent_buffer);
 		}
 	}
 
@@ -202,12 +199,10 @@ class StreamFeelModInstance : public pp::Instance {
     // Ignore the message if it is not a string.
     if (!var_message.is_string()){
       if(var_message.is_array()){
+      	int inst_id = pp_instance();
 		auto val = pp::VarArray(var_message);
 		//loads our containers and trains the classifier.
-		RC.buildCategorizer(val);
-		std::string complete = "Train complete";
-      	pp::Var reply(complete);
-      	PostMessage(reply);
+		RC.buildCategorizer(val,inst_id);
       }
       return;
     }

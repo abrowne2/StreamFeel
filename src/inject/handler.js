@@ -17,10 +17,15 @@ function moduleDidLoad() {
   common.hideModule();
   //post both datasets to the module to build the categorizers.
   common.naclModule.postMessage(trainRelevance());
+  common.naclModule.postMessage(firstSentChunk());
 }
+
+
 
 //called by common.js when native client responds.
 function handleMessage(message) {
+    if(message == "f") //native client wants second chunk now.
+    	common.naclModule.postMessage(secoSentChunk());
     ref.postMessage(message.data);
 }
 
@@ -28,6 +33,10 @@ function trainRelevance() {
 	return ["0"].concat(relevance_data);
 }
 
-function trainSentiment() {
-	return sentiment;
+function firstSentChunk() {
+	return ["1"].concat(sentiment);
+}
+
+function secoSentChunk() {
+	return ["2"].concat(sentiment2);
 }
