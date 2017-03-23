@@ -24,3 +24,18 @@ li.message-line.chat-line.special-message {
 	visibility: visible;
 }
 
+
+/*.dataviz {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -250px;
+    margin-left: -400px;
+    color: #D3D3D3;
+    width: 800px;
+    height: 500px;
+    z-index: 9002;
+    border-radius: 3px;
+    border: 1px solid #000;
+}
+*/

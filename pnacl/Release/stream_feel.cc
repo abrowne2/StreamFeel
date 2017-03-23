@@ -20,9 +20,9 @@
 using namespace mitie;
 using namespace dlib;
 
-struct relevanceClassifier {
-	//text categorizer to determine relevance.
-	text_categorizer drelevant;
+struct dataClassifier {
+	//categorizers for sentiment and relevance.
+	text_categorizer drelevant, sentiment; 
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -55,7 +55,8 @@ struct relevanceClassifier {
 	 * We parse the binary into it's representation, create a 
 	 * vectorstream and decode the stream into the categorizer. */
 	void buildCategorizer(pp::VarArray& data){
-		int index = 0, size = data.GetLength();
+		int dataset = data.Get(0).AsInt(); //use this to determine which dataset.
+		int index = 1, size = data.GetLength() - 1;
 		std::vector<char> buffer;
 		buffer.reserve(size/2);
 		while(index < size){
@@ -65,7 +66,10 @@ struct relevanceClassifier {
 		}
 		dlib::vectorstream trained_model(buffer);
 		//decode the serialized stream and the categorizer is built.
-		drelevant.decode(drelevant,trained_model);
+		if(dataset == 1)
+			drelevant.decode(drelevant,trained_model);
+		else
+			sentiment.decode(sentiment,trained_model);
 		buffer.clear();
 	}
 	
@@ -75,12 +79,19 @@ struct relevanceClassifier {
 		std::string tag = drelevant(tokenized);
 		return tag == "y";
 	}
+
+	//as opposed to relevance, return the tag for the message.
+	std::string determineFeel(std::string& message) {
+		std::vector<std::string> tokenized = tokenize_msg(message);
+		std::string tag = sentiment(tokenized);
+		return tag;
+	}
 };
 
 
 namespace {
-	//we're going to use this to classify text as relevant.
-	relevanceClassifier RC;
+	//we're going to use this to classify text as relevant or it's sentiment.
+	dataClassifier RC;
 	std::string current_user;
 }  // namespace
 
@@ -183,14 +194,16 @@ class StreamFeelModInstance : public pp::Instance {
 	if(parsed.userMentioned == true) {
 		bool relevant = RC.isRelevant(parsed.msg);
 		response += (relevant == true? "1|": "0|");
-		//COMPUTE THE SENTIMENT NEXT.
+		std::string feeling = RC.determineFeel(parsed.msg);
+		response += feeling;
 	} else {
 		if(parsed.cmdMsg == true) //we assume commands aren't relevant.
 			response += "0|";
 		else {
 			bool relevant = RC.isRelevant(parsed.msg);
 			response += (relevant == true? "1|": "0|");
-			//COMPUTE SENTIMENT HERE.
+			std::string feeling = RC.determineFeel(parsed.msg);
+			response += feeling;
 		}
 	}
 	response += ("|" + parsed.msg);	 //lastly, append the msg.

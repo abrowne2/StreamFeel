@@ -118,7 +118,7 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     		var structure = document.createElement("div");
     		// structure.style.visibility = "hidden";
     		structure.setAttribute("id","dataviz");
-    		var styling = "position:absolute;top:50%;left:50%;margin-top:-250px;margin-left:-400px;width:800px;height:500px;z-index:9002;border-radius:3px;border: 1px solid #000;";
+    		var styling = "position:absolute;top:50%;left:50%;margin-top:-250px;margin-left:-400px;width:550px;height:420px;z-index:9002;border-radius:3px;border: 1px solid #000;background-color:mintcream;padding-right:100px";
     		structure.setAttribute("style", styling);
 			sentiment = document.createElement("div");
 			sentiment.setAttribute("id","sent");
@@ -204,15 +204,11 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 					]
 				},
 				"canvasPadding": {
-					"top": 2,
-					"right": 2,
-					"bottom": 2,
-					"left": 2
+					"top": 2, "right": 2, "bottom": 2, "left": 2
 				}
 			}
-		});        // pie.redraw();
+		});    
     }
-
     var oldStream = "";
     var curStream = window.location.href;
     function checkChangedStream(curStream){
