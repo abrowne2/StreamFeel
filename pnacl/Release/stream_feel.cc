@@ -8,6 +8,8 @@
 #include <cstring>
 #include <bitset>
 
+
+/*12:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
@@ -23,6 +25,8 @@ using namespace dlib;
 struct dataClassifier {
 	//categorizers for sentiment and relevance.
 	text_categorizer drelevant, sentiment; 
+	std::vector<char> sent_buffer, sec_sent;
+	bool secondChunk = false; 
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -55,21 +59,44 @@ struct dataClassifier {
 	 * We parse the binary into it's representation, create a 
 	 * vectorstream and decode the stream into the categorizer. */
 	void buildCategorizer(pp::VarArray& data){
-		int index = 0, size = data.GetLength();
-		std::vector<char> buffer;
-		// buffer.reserve(size/2);
-		while(index < size){
+		int choice = data.Get(0).AsInt();
+		if(choice == 0){
+			std::vector<char> buffer;
+			buildBuffer(data, buffer);
+			decodeStream('r',buffer);
+		} else if(choice == 1){
+			buildBuffer(data,sent_buffer);
+			if(sec_sent.size() > 0 && secondChunk == true){
+				std::move(sec_sent.begin(), sec_sent.end(), std::back_inserter(sent_buffer));
+				decodeStream('s',sent_buffer);
+			}
+		} else if(choice == 2){
+			buildBuffer(data,sec_sent);
+			secondChunk = true;
+		}
+	}
+
+	void buildBuffer(pp::VarArray& data, std::vector<char>& buffer){
+		int index = 1, size = data.GetLength() - 1;
+		buffer.reserve(size / 2);
+		while(index <= size){
 			char byte = data.Get(index).AsInt();
 			buffer.push_back(byte);
 			++index;
 		}
+	}
+
+	void decodeStream(char part, std::vector<char>& buffer){
 		dlib::vectorstream trained_model(buffer);
-		//decode the serialized stream and the categorizer is built.
-		if(size < 10000000) //know relevance dataset is smaller than 20m bytes
-			drelevant.decode(drelevant,trained_model);
-		else
-			sentiment.decode(sentiment,trained_model);
+		deserialize(trained_model,part);
 		buffer.clear();
+	}
+
+	void deserialize(dlib::vectorstream& trained_model, char ch){
+		if(ch == 'r')
+			drelevant.decode(drelevant,trained_model);
+		else 
+			sentiment.decode(sentiment,trained_model);
 	}
 	
 	bool isRelevant(std::string& message){

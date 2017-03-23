@@ -59,6 +59,7 @@ std::vector<std::string> dataset(char which){
 	return split(raw);
 }
 
+
 /* Serialize works by pulling the existing dataset, subsequently training it,
  * then serializing (encodes) the data to the vector stream and returning its' buffer */
 std::vector<char> serialize(char choice) {
@@ -119,6 +120,30 @@ void displayMenu() {
 	std::cout << "5. Display Menu\n";
 }
 
+//after testing, I've discovered the sentiment dataset is so large it must be split into chunks.
+void segmentData(std::vector<char>& buffer, std::string& updated_data, char choice){
+	if(choice == 'r'){
+		for(int byte : buffer)
+			updated_data += (to_string(byte) + ",");
+		updated_data.pop_back();
+		updated_data += "\n];";			
+	} else {
+		//for sentiment, we must segment it into two chunks.
+		for(int i = 0; i < buffer.size() / 2; ++i){
+			int byte = buffer[i];
+			updated_data += (to_string(byte) + ",");
+		}
+		updated_data.pop_back();
+		updated_data += "\n];\n\nvar sentiment2 = [\n";
+		for(int i = buffer.size() / 2; i < buffer.size(); ++i){
+			int byte = buffer[i];
+			updated_data += (to_string(byte) + ",");
+		}
+		updated_data.pop_back();
+		updated_data += "\n];";
+	}
+}
+
 /* Serializes a trained categorizer model and writes its
  * raw representation to the javascript file containing it,
  * this will be deserialized by the native client module. */
@@ -134,13 +159,12 @@ void updateDataset(char choice){
 		file_name = "/Users/adambrowne/Desktop/Personal/StreamFeel/src/inject/sentiment.js";
 	}
 	std::string updated_data = "var " + var_name;
-	for(int byte : buffer)
-		updated_data += (to_string(byte) + ",");
-	updated_data.pop_back(); //kill trailing comma.
-	updated_data += "\n];";
+	segmentData(buffer,updated_data,choice);
 	std::ofstream dataWriter(file_name);
 	dataWriter << updated_data;
 }
+
+
 //1 - Update Rel, 2 - Update Sent, 3 - Add Rel, 4 - Add Sent - 5: display menu
 int main() {
 	int choice; //1 - 4:	

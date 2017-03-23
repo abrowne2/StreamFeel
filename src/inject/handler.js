@@ -25,7 +25,7 @@ function handleMessage(message) {
 }
 
 function trainRelevance() {
-	return relevance_data;
+	return ["0"].concat(relevance_data);
 }
 
 function trainSentiment() {
