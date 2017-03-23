@@ -16,20 +16,18 @@ function moduleDidLoad() {
   // in the plugin, so it is fine to hide it.
   common.hideModule();
   //post both datasets to the module to build the categorizers.
-  common.naclModule.postMessage(trainRelevance());
   common.naclModule.postMessage(trainSentiment());
 }
 
 //called by common.js when native client responds.
 function handleMessage(message) {
-    console.log(message.data);
     ref.postMessage(message.data);
 }
 
 function trainRelevance() {
-    return ["1"].concat(relevance_data);
+	return relevance_data;
 }
 
 function trainSentiment() {
-	return ["0"].concat(sentiment);
+	return sentiment;
 }

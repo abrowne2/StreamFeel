@@ -55,10 +55,9 @@ struct dataClassifier {
 	 * We parse the binary into it's representation, create a 
 	 * vectorstream and decode the stream into the categorizer. */
 	void buildCategorizer(pp::VarArray& data){
-		int dataset = data.Get(0).AsInt(); //use this to determine which dataset.
-		int index = 1, size = data.GetLength() - 1;
+		int index = 0, size = data.GetLength();
 		std::vector<char> buffer;
-		buffer.reserve(size/2);
+		// buffer.reserve(size/2);
 		while(index < size){
 			char byte = data.Get(index).AsInt();
 			buffer.push_back(byte);
@@ -66,7 +65,7 @@ struct dataClassifier {
 		}
 		dlib::vectorstream trained_model(buffer);
 		//decode the serialized stream and the categorizer is built.
-		if(dataset == 1)
+		if(size < 10000000) //know relevance dataset is smaller than 20m bytes
 			drelevant.decode(drelevant,trained_model);
 		else
 			sentiment.decode(sentiment,trained_model);
