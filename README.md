@@ -20,7 +20,6 @@ Additionally, for data visualization;
 * **streamfeelutil.cpp** (/) 
 : Utility to update (serialize) dataset for
 the native client module to use for classification
--- All files found below (src/inject) -- 
 * **inject.js** 
 : Code injected into stream's page to manipulate twitch chat
 * **handler.js** 
