@@ -224,10 +224,3 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     }
 
     checkChangedStream();
-
-// var tester = false, pie;
-// ready("div.mg-b-2", function(element){
-//     if(tester == false){
-//     }
-// });
-
