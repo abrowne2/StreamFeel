@@ -224,3 +224,4 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     }
 
     checkChangedStream();
+    
