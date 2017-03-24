@@ -20,13 +20,14 @@ Additionally, for data visualization;
 * **streamfeelutil.cpp** (/) 
 : Utility to update (serialize) dataset for
 the native client module to use for classification
-* **inject.js** (src/inject)
+-- All files found below (src/inject) -- 
+* **inject.js** 
 : Code injected into stream's page to manipulate twitch chat
-* **handler.js** (src/inject)
+* **handler.js** 
 : Connected to inject.js & native client (which is embedded in a background page). Middleman between content script and the native client.
-* **default.js** (src/inject) 
+* **default.js** 
 : Raw relevance dataset.
-* **sentiment.js** (src/inject)
+* **sentiment.js** 
 : Raw sentiment dataset, seperated into two chunks.
 
 ### Technical Challenges Addressed
