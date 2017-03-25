@@ -24,7 +24,6 @@ function moduleDidLoad() {
 
 //called by common.js when native client responds.
 function handleMessage(message) {
-    console.log(message.data);
     if(message.data == "f") //native client wants second chunk now.
     	common.naclModule.postMessage(secoSentChunk());
     ref.postMessage(message.data);
