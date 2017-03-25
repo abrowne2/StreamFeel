@@ -10,9 +10,9 @@ It uses a form of machine learning: specifically multiclass linear SVM classific
 
 Additionally, for data visualization;
 * **d3.js**
-(Copyright 2010-2016 Mike Bostock)
+(Copyright Mike Bostock)
 * **d3pie**
-(Copyright (c) 2014-2015 Benjamin Keen)
+(Copyright Benjamin Keen)
 
 ### Important files
 * **stream_feel.cc** (pnacl/Release)
