@@ -6,8 +6,8 @@
 #include <string>
 #include <algorithm>
 #include <cstring>
+#include <queue>
 
-/*10:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
@@ -23,6 +23,7 @@ using namespace dlib;
 struct dataClassifier {
 	//categorizers for sentiment and relevance.
 	text_categorizer drelevant, sentiment; 
+	bool isTrained = false;
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -75,6 +76,7 @@ struct dataClassifier {
 		} else if(choice == 2){
 			buildBuffer(data,buf);
 			decodeStream('s',buf);
+			isTrained = true;
 		}
 	}
 
@@ -106,15 +108,6 @@ struct dataClassifier {
 		return tag;
 	}
 };
-
-
-namespace {
-	//we're going to use this to classify text as relevant or it's sentiment.
-	dataClassifier RC;
-	std::vector<char> cat_buf;
-	std::string current_user;
-}  // namespace
-
 
 /* first, parse the user's name. Then, determine if there is a mention
  * with their name. if so, set the flag; also parse that mention out, 
@@ -200,6 +193,58 @@ struct StreamMessage {
 	}
 };
 
+struct responseFormatter {
+	dataClassifier RC;	
+	std::queue<StreamMessage> backlog;
+
+	void addMessage(StreamMessage& msg){
+		backlog.push(msg);
+	}
+
+	//unloads the backlog.
+	std::vector<std::string> unload() {
+		std::vector<std::string> log;
+		log.reserve(backlog.size());
+		while(!backlog.empty()) {
+			StreamMessage msg = backlog.front();
+			backlog.pop();
+			std::string response = processMessage(msg);
+			log.push_back(response);
+		}
+		return log;
+	}
+
+	std::string processMessage(StreamMessage& parsed){
+		std::string response = parsed.id + "|" + parsed.time + "|" + parsed.user + "|";
+		//if the sfeel user was mentioned here...
+		if(parsed.userMentioned == true) {
+			bool relevant = RC.isRelevant(parsed.msg);
+			response += (relevant == true? "1|": "0|");
+			std::string feeling = RC.determineFeel(parsed.msg);
+			response += feeling;
+		} else {
+			if(parsed.cmdMsg == true) { //we assume commands aren't relevant.
+				response += ("0||" + parsed.cmd);
+			} else {
+				bool relevant = RC.isRelevant(parsed.msg);
+				response += (relevant == true? "1|": "0|");
+				std::string feeling = RC.determineFeel(parsed.msg);
+				response += feeling;
+			}
+		}
+		response += ("|" + parsed.msg);	 //lastly, append the msg.
+		return response;
+	}
+};
+
+
+//namespace referenced by the below instance.
+namespace {
+	responseFormatter RF;
+	std::vector<char> cat_buf;
+	std::string current_user;
+}
+
 class StreamFeelModInstance : public pp::Instance {
  public:
   explicit StreamFeelModInstance(PP_Instance instance)
@@ -213,34 +258,24 @@ class StreamFeelModInstance : public pp::Instance {
       	int inst_id = pp_instance();
 		auto val = pp::VarArray(var_message);
 		//loads our containers and trains the classifier.
-		RC.buildCategorizer(val,cat_buf,inst_id);
+		RF.RC.buildCategorizer(val,cat_buf,inst_id);
       }
       return;
     }
 	// ID | Time | From | Rel | Sentiment | Command | Msg  <-- Response Format
 	std::string message = var_message.AsString();
-	StreamMessage parsed = StreamMessage(message, current_user);
-	std::string response = parsed.id + "|" + parsed.time + "|" + parsed.user + "|";
-	//if the sfeel user was mentioned here...
-	if(parsed.userMentioned == true) {
-		bool relevant = RC.isRelevant(parsed.msg);
-		response += (relevant == true? "1|": "0|");
-		std::string feeling = RC.determineFeel(parsed.msg);
-		response += feeling;
-	} else {
-		if(parsed.cmdMsg == true) { //we assume commands aren't relevant.
-			response += ("0||" + parsed.cmd);
-		} else {
-			bool relevant = RC.isRelevant(parsed.msg);
-			response += (relevant == true? "1|": "0|");
-			std::string feeling = RC.determineFeel(parsed.msg);
-			response += feeling;
+	StreamMessage parsed = StreamMessage(message, current_user);    
+	if(RF.RC.isTrained == false){
+		RF.addMessage(parsed);
+	} else if(!RF.backlog.empty() && RF.RC.isTrained == true){
+		std::vector<std::string> handle = RF.unload();
+		for(auto message : handle){
+			PostMessage(pp::Var(message));
 		}
+	} else {
+		std::string response = RF.processMessage(parsed);
+		PostMessage(pp::Var(response));
 	}
-	response += ("|" + parsed.msg);	 //lastly, append the msg.
-	pp::Var var_reply(response);
-	//post the msg using PostMessage(var_reply) ^^
-	PostMessage(var_reply);
   }
 };
 
