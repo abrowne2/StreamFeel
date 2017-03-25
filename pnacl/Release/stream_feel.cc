@@ -8,6 +8,8 @@
 #include <cstring>
 #include <queue>
 
+/*11:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
+/*12:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
@@ -193,6 +195,9 @@ struct StreamMessage {
 	}
 };
 
+/* The responseFormatter contains the classifier which makes conclusions about our data.
+ * it also has a backlog, which as the categorizer is being trained stores the messages.
+ * once trained, it unloads the backlog and then processes subsequent messages */
 struct responseFormatter {
 	dataClassifier RC;	
 	std::queue<StreamMessage> backlog;
@@ -201,7 +206,6 @@ struct responseFormatter {
 		backlog.push(msg);
 	}
 
-	//unloads the backlog.
 	std::vector<std::string> unload() {
 		std::vector<std::string> log;
 		log.reserve(backlog.size());
