@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstring>
 
+/*10:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
@@ -119,7 +120,7 @@ namespace {
  * with their name. if so, set the flag; also parse that mention out, 
  * same applies whether or not the user is mentioned. */
 struct StreamMessage {
-	std::string id, time, user, msg, cur_user;	
+	std::string id, time, user, msg, cur_user, cmd;
 	bool userMentioned = false, cmdMsg = false;		
 
 	/* parseMention will parse the message and see if
@@ -146,18 +147,33 @@ struct StreamMessage {
 					in_mention = false;
 			}
 		}
-		msg = std::move(new_msg);
+		msg = new_msg;
 	}
 
 	/* naive approach to determine if the message was a command:
-	 * If the next character after the '!' isn't a space, it could be one. */
+	 * If the next character after the '!' isn't a space, it could be one. 
+	 * We also extract the command from the message to examine them. */
 	void determineCommand() {
-		//try to find an exclamation mark first.
 		auto exclamation = msg.find("!");
-		if(exclamation != std::string::npos && exclamation + 1 < msg.size())
+		if(exclamation != std::string::npos && exclamation + 1 < msg.size()){
 			cmdMsg = msg[exclamation+1] != ' '? true: false;
+			//extract the command for use in analytics.			
+			if(cmdMsg == true){
+				int begin = exclamation + 1, end = msg.find(" ",begin);
+				if(end != std::string::npos){
+					cmd = msg.substr(begin,end-begin);
+				} else {
+					cmd = msg.substr(begin);
+				}
+			}
+		}
 		else
 			cmdMsg = false;
+	}
+
+	void handleMsg() {
+		parseMention();
+		determineCommand();
 	}
 
 	/* A 'StreamMessage' is constructed by parsing the original data,
@@ -180,8 +196,7 @@ struct StreamMessage {
 		//get the msg.
 		msg = data.substr(cur_pos);
 		//perform final parsing; parse mentions and determine if !cmd.
-		parseMention();
-		determineCommand();
+		handleMsg();
 	}
 };
 
@@ -202,10 +217,9 @@ class StreamFeelModInstance : public pp::Instance {
       }
       return;
     }
-	//get the string message and parse it.
+	// ID | Time | From | Rel | Sentiment | Command | Msg  <-- Response Format
 	std::string message = var_message.AsString();
 	StreamMessage parsed = StreamMessage(message, current_user);
-     // ID | Time | From | Rel | Usr | Msg  <-- Response Format
 	std::string response = parsed.id + "|" + parsed.time + "|" + parsed.user + "|";
 	//if the sfeel user was mentioned here...
 	if(parsed.userMentioned == true) {
@@ -214,9 +228,9 @@ class StreamFeelModInstance : public pp::Instance {
 		std::string feeling = RC.determineFeel(parsed.msg);
 		response += feeling;
 	} else {
-		if(parsed.cmdMsg == true) //we assume commands aren't relevant.
-			response += "0|";
-		else {
+		if(parsed.cmdMsg == true) { //we assume commands aren't relevant.
+			response += ("0||" + parsed.cmd);
+		} else {
 			bool relevant = RC.isRelevant(parsed.msg);
 			response += (relevant == true? "1|": "0|");
 			std::string feeling = RC.determineFeel(parsed.msg);
