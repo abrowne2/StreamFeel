@@ -8,8 +8,6 @@
 #include <cstring>
 #include <queue>
 
-/*11:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
-/*12:10: fatal error: 'ppapi/cpp/instance.h' file not found #include "ppapi/cpp/instance.h" ^ 1 error generated.*/
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
@@ -272,6 +270,7 @@ class StreamFeelModInstance : public pp::Instance {
 	if(RF.RC.isTrained == false){
 		RF.addMessage(parsed);
 	} else if(!RF.backlog.empty() && RF.RC.isTrained == true){
+		RF.addMessage(parsed);
 		std::vector<std::string> handle = RF.unload();
 		for(auto message : handle){
 			PostMessage(pp::Var(message));
