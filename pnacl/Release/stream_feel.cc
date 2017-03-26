@@ -175,18 +175,14 @@ struct StreamMessage {
 		cur_user = sf_usr; 
 		//data format is id | time | user | message.
 		int cur_pos = 0, cur_delim = data.find("|", cur_pos);
-		//get the id.
 		id = data.substr(0,cur_delim);
 		cur_pos = cur_delim + 1;
 		cur_delim = data.find("|", cur_delim+1);
-		// //get the timestamp.
 		time = data.substr(cur_pos, cur_delim-cur_pos);
 		cur_pos = cur_delim + 1;
 		cur_delim = data.find("|", cur_delim+1);
-		//get the user.
 		user = data.substr(cur_pos, cur_delim-cur_pos);
 		cur_pos = cur_delim + 1;
-		//get the msg.
 		msg = data.substr(cur_pos);
 		//perform final parsing; parse mentions and determine if !cmd.
 		handleMsg();
