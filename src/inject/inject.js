@@ -4,8 +4,13 @@
 /* To observe the new messages, we need to use a MutationObserver
 * and then apply a queryselector to get the new message added:
 we're looking for: <li class="message-line chat-line ember-view"> */
-	var toggle_filter = false, pie = null;
-	var sentData = [
+	var toggle_filter = false, pie = null, curTimestamp;
+	//have to populate this with dictionaries regarding commands, emoji's, and sentiment.
+	/* Analytics dict: (By timestamp.) */
+	//have three arrays, of which 0 (sentiment), 1 (command), 2 (emoji)
+	var analData = {};
+	var analytics = [
+
 	  { label: "1", value: 6 },
 	  { label: "2", value: 4 },
 	  { label: "3", value: 3 },
@@ -16,6 +21,11 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 	  {label:"8",value:3},
 	  {label:"9",value:9}
 	];
+
+	/* DataViz Storage Mechanism
+	 * Store each by timestamp dict; inside the dict have the respective point of analytics.
+	 * ["8:05"] => 
+	*/
     //listener to the popup menu. We listen to it's instructions.
     chrome.runtime.onMessage.addListener(function(response){
         if(response == "tf")
@@ -26,7 +36,8 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     port.onMessage.addListener(function(message){
         var data = message.split("|");
         var target_msg = document.getElementById(data[0]);
-        if(data[3] == "1") {//TODO: Non-relevant display CONFIGURE BY POPup
+        storeAnalyticsData(data);
+        if(data[3] == "1") {
             try {
                 target_msg.setAttribute("style", "display:block;visibility:visible;");
             } catch(err) {}
@@ -36,6 +47,19 @@ we're looking for: <li class="message-line chat-line ember-view"> */
             } catch(err) {}
         }
     });
+
+    function storeAnalyticsData(data){
+    	if(!(data[1] in analData) == true){
+    		//sent, cmd, emoji storage    		
+    		analData[data[1]] = [[],[],[]];
+    	}
+        if(data[4] != "") { //sentiment analytics
+        	var sent = data[4];
+        	analData[data[1]]
+        } else { //command analytics
+
+        }
+    }
 
     var handleTwitchMsg = function(msg) {
         var timestamp = msg.querySelector("span.timestamp").textContent
@@ -160,7 +184,7 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 				"pieOuterRadius": "96%"
 			},
 			"data": {
-				"content": sentData
+				"content": analytics
 			},
 			"labels": {
 				"mainLabel": {
