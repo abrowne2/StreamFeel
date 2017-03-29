@@ -82,13 +82,24 @@ std::vector<char> serialize(char choice) {
     return buf;
 }
 
+//input validation for adding records.
+bool notValid(const std::string& input, char type) {
+	if(type == 'r')
+		return input != "y" && input != "n";
+	else
+		return (input != "funny" && input != "sad" && input != "happy" 
+			&& input != "angry" && input != "confused" && input != "curious" 
+			&& input != "gentlemanly" && input != "astonished" && input != "friendly");
+}
 
-void readRecord(std::string& msg, std::string& label, const std::string& lbl) {
+void readRecord(std::string& msg, std::string& label, const std::string& lbl, char choice) {
 	std::cout << "Enter message:\n"; 
 	std::cin.ignore();
 	std::getline(std::cin,msg);
 	std::cout << lbl;
-	std::cin >> label;
+	do {
+		std::cin >> label;
+	} while(notValid(label,choice) == true);
 	//need the delimeter ',': can't confuse it.
 	msg.erase(std::remove(msg.begin(), msg.end(), ','), msg.end());
 }
@@ -106,7 +117,7 @@ void addRecord(char choice) {
 	std::ofstream fileWriter;
 	fileWriter.open(file, std::ios_base::app);
 	//append the new record to the dataset.
-	readRecord(msg,label,lbl);
+	readRecord(msg,label,lbl,choice);
 	std::string new_msg = "," + msg + "," + label;
 	fileWriter << new_msg;
 	std::cout << "Added " << msg << "," << label << std::endl;
