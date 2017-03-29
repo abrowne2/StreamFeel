@@ -154,9 +154,9 @@ struct StreamMessage {
 			if(cmdMsg == true){
 				int begin = exclamation + 1, end = msg.find(" ",begin);
 				if(end != std::string::npos){
-					cmd = msg.substr(begin,end-begin);
+					cmd = "!" + msg.substr(begin,end-begin);
 				} else {
-					cmd = msg.substr(begin);
+					cmd = "!" + msg.substr(begin);
 				}
 			}
 		}

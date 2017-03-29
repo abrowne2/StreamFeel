@@ -47,7 +47,6 @@ we're looking for: <li class="message-line chat-line ember-view"> */
             } catch(err) {}
         }
         storeAnalyticsData(data);        
-        console.log(analData[data[1]][3]);
     });
 
     function storeAnalyticsData(data){
