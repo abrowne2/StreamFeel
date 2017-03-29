@@ -46,16 +46,10 @@ std::vector<std::string> split(std::string& raw){
 }
 
 /* Load an existing dataset from a file. */
-std::vector<std::string> dataset(char which){
-	//used to hold data extracted from the file.
+std::vector<std::string> dataset(char c){
 	std::string raw;	
-	if(which == 'r'){
-		std::ifstream fileReader("relevance.txt");
-		raw = readData(fileReader);
-	} else {
-		std::ifstream fileReader("sentiment.txt");
-		raw = readData(fileReader);
-	}
+	std::ifstream fReader(c == 'r'? "relevance.txt": "sentiment.txt");
+	raw = readData(fReader);
 	return split(raw);
 }
 
