@@ -122,11 +122,9 @@ struct StreamMessage {
 
 	//tolower can crash if not ascii...
 	void ensureCase(std::string& substring){
-		for(int i=0; i<substring.size(); ++i){
-			if((substring[i] & ~0x7F) == 0){ //toascii used to be defined similarly.
+		for(int i=0; i<substring.size(); ++i)
+			if((substring[i] & ~0x7F) == 0) //toascii used to be defined similarly.
 				substring[i] = std::tolower(substring[i]);
-			}
-		}
 	}
 
 	void searchUser(std::string& look_for){
