@@ -15,8 +15,9 @@
     var port = chrome.runtime.connect({name: "handler"});
     port.onMessage.addListener(function(message){
         var data = message.split("|");
+        console.log(data);
         var target_msg = document.getElementById(data[0]);
-        if(data[3] == "1") {
+        if(data[4] == "1") {
             try {
                 target_msg.setAttribute("style", "display:block;visibility:visible;");
             } catch(err) {}
@@ -33,8 +34,8 @@
     	if(!(data[1] in analData) == true){
     		analData[data[1]] = [[],[],[],{}];
     	}
-        if(data[4] != "") { //sentiment analytics
-        	var sent = data[4]; 
+        if(data[5] != "") { //sentiment analytics
+        	var sent = data[5]; 
         	if(!(sent in analData[data[1]][3]) == true) {
         		analData[data[1]][3][sent] = 1;
         	} else {
@@ -78,7 +79,7 @@
         var user = msg.querySelector("span.from").textContent
         var message = msg.querySelector("span.message").textContent.trim()
         var identifier = msg.id;
-        port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
+        port.postMessage({id: identifier, time: timestamp, usr: user, curusr: current_user, data: message});
     }
     
     var getChatBoxElement = function(main) {

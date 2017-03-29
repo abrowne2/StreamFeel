@@ -5,7 +5,7 @@
 var styling = "position:absolute;top:50%;left:50%;margin-top:-250px;margin-left:-400px;width:450px;height:350px;z-index:9002; +\
 				border-radius:3px;border: 1px solid #000;background-color:mintcream;cursor:pointer;";
 
-var current_user;
+var current_user = "";
 
 function setupDataViz() {
 	var frame = document.getElementById("dataviz");
@@ -24,7 +24,6 @@ function setupDataViz() {
 	}
 	return sentiment;
 }
-
 
 function getCurUser() {
 	if(document.querySelector("div.js-chat-display") != null){

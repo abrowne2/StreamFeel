@@ -25,7 +25,6 @@ struct dataClassifier {
 	//categorizers for sentiment and relevance.
 	text_categorizer drelevant, sentiment; 
 	bool isTrained = false;
-	std::string parsedUser;
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -79,8 +78,6 @@ struct dataClassifier {
 			buildBuffer(data,buf);
 			decodeStream('s',buf);
 			isTrained = true;
-		} else if(choice == 9){
-			parsedUser = data.Get(1).AsString();
 		}
 	}
 
@@ -145,6 +142,7 @@ struct StreamMessage {
 		if(cur_user.size() > 0) {
 			std::string look_for = '@' + cur_user;
 			searchUser(look_for);
+			cur_user = userMentioned != true? "": cur_user; 
 		}
 		bool in_mention = false;
 		std::string new_msg = "";
@@ -189,10 +187,9 @@ struct StreamMessage {
 	}
 
 	/* A 'StreamMessage' is constructed by parsing the original data,
-	 * where it is subsequently used for computation. */
-	StreamMessage(std::string& data, std::string sf_usr) {
-		cur_user = sf_usr; 
-		//data format is id | time | user | message.
+	 * where it is subsequently used for computation. 
+	 * data format is id | time | user | cur_user | message */
+	StreamMessage(std::string& data) {
 		int cur_pos = 0, cur_delim = data.find("|", cur_pos);
 		id = data.substr(0,cur_delim);
 		cur_pos = cur_delim + 1;
@@ -201,6 +198,9 @@ struct StreamMessage {
 		cur_pos = cur_delim + 1;
 		cur_delim = data.find("|", cur_delim+1);
 		user = data.substr(cur_pos, cur_delim-cur_pos);
+		cur_pos = cur_delim + 1;
+		cur_delim = data.find("|", cur_delim+1);
+		cur_user = data.substr(cur_pos, cur_delim-cur_pos);
 		cur_pos = cur_delim + 1;
 		msg = data.substr(cur_pos);
 		//perform final parsing; parse mentions and determine if !cmd.
@@ -215,11 +215,7 @@ struct responseFormatter {
 	dataClassifier RC;	
 	std::queue<StreamMessage> backlog;
 
-	std::string curUser() const { 
-		return RC.parsedUser;
-	}
-
-	bool isReady() const { //ready to shoot messages 
+	bool isReady() const { 
 		return RC.isTrained;
 	}
 
@@ -240,24 +236,15 @@ struct responseFormatter {
 	}
 
 	std::string processMessage(StreamMessage& parsed){
-		std::string response = parsed.id + "|" + parsed.time + "|" + parsed.user + "|";
-		//if the sfeel user was mentioned here...
-		if(parsed.userMentioned == true) {
+		std::string response = parsed.id + "|" + parsed.time + "|" 
+			+ parsed.user + "|" + parsed.cur_user + "|";
+		if(parsed.cmdMsg == true) {
+			response += ("0||" + parsed.cmd);
+		} else {
 			bool relevant = RC.isRelevant(parsed.msg);
 			response += (relevant == true? "1|": "0|");
-			if(parsed.cmdMsg == false) {
-				std::string feeling = RC.determineFeel(parsed.msg);
-				response += feeling;
-			}
-		} else {
-			if(parsed.cmdMsg == true) { //we assume commands aren't relevant.
-				response += ("0||" + parsed.cmd);
-			} else {
-				bool relevant = RC.isRelevant(parsed.msg);
-				response += (relevant == true? "1|": "0|");
-				std::string feeling = RC.determineFeel(parsed.msg);
-				response += feeling;
-			}
+			std::string feeling = RC.determineFeel(parsed.msg);
+			response += feeling;
 		}
 		response += ("|" + parsed.msg);	 //lastly, append the msg.
 		return response;
@@ -295,7 +282,7 @@ class StreamFeelModInstance : public pp::Instance {
     }
 	// ID | Time | From | Rel | Sentiment | Command | Msg  <-- Response Format
 	std::string message = var_message.AsString();
-	StreamMessage parsed = StreamMessage(message, RF.curUser()); 
+	StreamMessage parsed = StreamMessage(message); 
 	if(RF.isReady() == false){
 		RF.addMessage(parsed);
 	} else if(!RF.backlog.empty() && RF.isReady() == true){

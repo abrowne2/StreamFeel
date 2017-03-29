@@ -7,7 +7,7 @@ chrome.runtime.onConnect.addListener(function(port) {
     port.onMessage.addListener(function(msg){
         //format id | time | usr | message
         //send over the data to the naclmodule, where we'll derive relevance/conclusions.
-		common.naclModule.postMessage(msg['id']+'|'+msg['time']+'|'+msg['usr']+'|'+msg['data']);
+		common.naclModule.postMessage(msg['id']+'|'+msg['time']+'|'+msg['usr']+'|'+msg['curusr']+'|'+msg['data']);
     });
 });
 
@@ -16,7 +16,6 @@ function moduleDidLoad() {
   // in the plugin, so it is fine to hide it.
   common.hideModule();
   //post both datasets to the module to build the categorizers.
-  common.naclModule.postMessage([9,"blah78e"]);
   common.naclModule.postMessage(trainRelevance());
   common.naclModule.postMessage(firstSentChunk());
 }
