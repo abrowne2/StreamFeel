@@ -1,6 +1,8 @@
 /* Copyright (c) 2017 Adam Browne
  * Inject.js is the content script which analyzes twitch. */
 
+//NOTES to self: If no data for timestamp, don't render it.
+
 	var toggle_filter = false, pie = null, curTimestamp, prevTime, setting = 0;
 	//have three arrays, of which 0 (sentiment), 1 (command), 2 (emoji)
 	var analData = {};

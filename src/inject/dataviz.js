@@ -60,6 +60,12 @@ function chartSettings() {
 			"content": analytics
 		},
 		"labels": {
+			"outer": {
+				"pieDistance": 20
+			},
+			"inner": {
+				"hideWhenLessThanPercentage": 5
+			},
 			"mainLabel": {
 				"color": "#050506",
 				"font": "verdana",
@@ -109,7 +115,6 @@ function chartSettings() {
 
 //Lines 109-133 credit jnoreiga; http://stackoverflow.com/questions/9334084/moveable-draggable-div
 var x_pos = 0, y_pos = 0;
-
 function setupDrag() {
   var sent = document.getElementById('dataviz');
   sent.addEventListener('mousedown', mouseDown, false);
@@ -130,6 +135,6 @@ function mouseDown(e) {
 function divMove(e) {
   var div = document.getElementById('dataviz');
   div.style.position = 'absolute';
-  div.style.top = (e.clientY - y_pos) + 'px';
-  div.style.left = (e.clientX - x_pos) + 'px';
+  div.style.top = (e.clientY - y_pos + 250) + 'px'; //had to account for both offsets. (note by adam)
+  div.style.left = (e.clientX - x_pos + 400) + 'px'; 
 }
