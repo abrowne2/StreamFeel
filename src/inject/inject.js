@@ -80,16 +80,16 @@
         var identifier = msg.id;
         port.postMessage({id: identifier, time: timestamp, usr: user, data: message});
     }
-
+    
     var getChatBoxElement = function(main) {
         if(document.querySelector(main) != null){
             setupMessageListener(document.querySelector(main));
             var sentChart = setupDataViz();
             if(sentChart != null){
             	setupChart(sentChart);
-            }            
-            console.log(getCurUser());
-        } else {
+            }
+            getCurUser();
+		} else {
             setTimeout(function() {
                 getChatBoxElement(main);
             }, 500);

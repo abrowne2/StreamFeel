@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstring>
 #include <queue>
+#include <cctype>
 
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
@@ -24,6 +25,7 @@ struct dataClassifier {
 	//categorizers for sentiment and relevance.
 	text_categorizer drelevant, sentiment; 
 	bool isTrained = false;
+	std::string parsedUser;
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -77,6 +79,8 @@ struct dataClassifier {
 			buildBuffer(data,buf);
 			decodeStream('s',buf);
 			isTrained = true;
+		} else if(choice == 9){
+			parsedUser = data.Get(1).AsString();
 		}
 	}
 
@@ -116,16 +120,33 @@ struct StreamMessage {
 	std::string id, time, user, msg, cur_user, cmd;
 	bool userMentioned = false, cmdMsg = false;		
 
-	/* parseMention will parse the message and see if
-	 * the user using StreamFeel was mentioned. We will parse any and all
-	 * mentions out of the string regardless; so that the classifier isn't confused. */
+	//tolower can crash if not ascii...
+	void ensureCase(std::string& substring){
+		for(int i=0; i<substring.size(); ++i){
+			if((substring[i] & ~0x7F) == 0){ //toascii used to be defined similarly.
+				substring[i] = std::tolower(substring[i]);
+			}
+		}
+	}
+
+	void searchUser(std::string& look_for){
+		int index = 0;
+		while(index != msg.size()){
+			std::string part = msg.substr(index,look_for.size());
+			ensureCase(part);
+			if(part == cur_user){
+				userMentioned = true;
+				break;
+			}
+			++index;
+		}
+	}
+
 	void parseMention() {
 		//once we've determined the user's name, we then parse the mention in it...
-		std::string look_for = '@' + cur_user;
-		auto user_mention = msg.find(look_for);
-		if(user_mention != std::string::npos){
-			userMentioned = true;
-			//finish this LOGIC!!!
+		if(cur_user.size() > 0) {
+			std::string look_for = '@' + cur_user;
+			searchUser(look_for);
 		}
 		bool in_mention = false;
 		std::string new_msg = "";
@@ -171,7 +192,7 @@ struct StreamMessage {
 
 	/* A 'StreamMessage' is constructed by parsing the original data,
 	 * where it is subsequently used for computation. */
-	StreamMessage(std::string& data, std::string& sf_usr) {
+	StreamMessage(std::string& data, std::string sf_usr) {
 		cur_user = sf_usr; 
 		//data format is id | time | user | message.
 		int cur_pos = 0, cur_delim = data.find("|", cur_pos);
@@ -196,6 +217,14 @@ struct responseFormatter {
 	dataClassifier RC;	
 	std::queue<StreamMessage> backlog;
 
+	std::string curUser() const { 
+		return RC.parsedUser;
+	}
+
+	bool isReady() const { //ready to shoot messages 
+		return RC.isTrained;
+	}
+
 	void addMessage(StreamMessage& msg){
 		backlog.push(msg);
 	}
@@ -218,8 +247,10 @@ struct responseFormatter {
 		if(parsed.userMentioned == true) {
 			bool relevant = RC.isRelevant(parsed.msg);
 			response += (relevant == true? "1|": "0|");
-			std::string feeling = RC.determineFeel(parsed.msg);
-			response += feeling;
+			if(parsed.cmdMsg == false) {
+				std::string feeling = RC.determineFeel(parsed.msg);
+				response += feeling;
+			}
 		} else {
 			if(parsed.cmdMsg == true) { //we assume commands aren't relevant.
 				response += ("0||" + parsed.cmd);
@@ -233,6 +264,11 @@ struct responseFormatter {
 		response += ("|" + parsed.msg);	 //lastly, append the msg.
 		return response;
 	}
+
+	void processData(pp::VarArray& data, std::vector<char>& buf, int inst_id) {
+		RC.buildCategorizer(data,buf,inst_id);
+	}
+
 };
 
 
@@ -240,7 +276,6 @@ struct responseFormatter {
 namespace {
 	responseFormatter RF;
 	std::vector<char> cat_buf;
-	std::string current_user;
 }
 
 class StreamFeelModInstance : public pp::Instance {
@@ -256,16 +291,16 @@ class StreamFeelModInstance : public pp::Instance {
       	int inst_id = pp_instance();
 		auto val = pp::VarArray(var_message);
 		//loads our containers and trains the classifier.
-		RF.RC.buildCategorizer(val,cat_buf,inst_id);
+		RF.processData(val,cat_buf,inst_id);
       }
       return;
     }
 	// ID | Time | From | Rel | Sentiment | Command | Msg  <-- Response Format
 	std::string message = var_message.AsString();
-	StreamMessage parsed = StreamMessage(message, current_user);    
-	if(RF.RC.isTrained == false){
+	StreamMessage parsed = StreamMessage(message, RF.curUser()); 
+	if(RF.isReady() == false){
 		RF.addMessage(parsed);
-	} else if(!RF.backlog.empty() && RF.RC.isTrained == true){
+	} else if(!RF.backlog.empty() && RF.isReady() == true){
 		RF.addMessage(parsed);
 		std::vector<std::string> handle = RF.unload();
 		for(auto message : handle){
