@@ -4,7 +4,8 @@
 /* To observe the new messages, we need to use a MutationObserver
 * and then apply a queryselector to get the new message added:
 we're looking for: <li class="message-line chat-line ember-view"> */
-	var toggle_filter = false, pie = null, curTimestamp;
+	var toggle_filter = false, cursize = false, pie = null, curTimestamp, prevTime;
+	var setting = 0;
 	//have to populate this with dictionaries regarding commands, emoji's, and sentiment.
 	/* Analytics dict: (By timestamp.) */
 	//have three arrays, of which 0 (sentiment), 1 (command), 2 (emoji)
@@ -36,7 +37,6 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     port.onMessage.addListener(function(message){
         var data = message.split("|");
         var target_msg = document.getElementById(data[0]);
-        storeAnalyticsData(data);
         if(data[3] == "1") {
             try {
                 target_msg.setAttribute("style", "display:block;visibility:visible;");
@@ -46,20 +46,54 @@ we're looking for: <li class="message-line chat-line ember-view"> */
                 target_msg.setAttribute("style", "display:none;visibility:hidden;");
             } catch(err) {}
         }
+        storeAnalyticsData(data);        
+        console.log(analData[data[1]][3]);
     });
 
     function storeAnalyticsData(data){
     	if(!(data[1] in analData) == true){
     		//sent, cmd, emoji storage    		
-    		analData[data[1]] = [[],[],[]];
+    		analData[data[1]] = [[],[],[],{}];
     	}
         if(data[4] != "") { //sentiment analytics
-        	var sent = data[4];
-        	analData[data[1]]
+        	var sent = data[4]; //get the actual sentiment.
+        	if(!(sent in analData[data[1]][3]) == true) {
+        		analData[data[1]][3][sent] = 1;
+        	} else {
+        		++analData[data[1]][3][sent];
+        	}
+        	updateDataFreq(0,data[1]);
         } else { //command analytics
-
+        	//do nothing.
         }
+        if(curTimestamp != data[1]) {
+        	curTimestamp = data[1];
+        }
+		pie.updateProp("data.content",analData[curTimestamp][setting]);        
     }
+	//it's guaranteed this won't be 0 at the end of this program,...
+    function calcTotal(time){
+    	var total = 1; 
+		for(var key in analData[time][3]){
+			if(analData[time][3].hasOwnProperty(key)){
+				total += analData[time][3][key];
+			}
+		}
+		return total;
+    }
+
+    function updateDataFreq(type,time){
+    	//we don't need the previous contents, we have the frequencies.
+		analData[time][type] = [];
+		var totalFreq = calcTotal(time);
+		for(var key in analData[time][3]){
+			if(analData[time][3].hasOwnProperty(key)){
+				var val = analData[time][3][key];
+				analData[time][type].push({label: key, value: (val / totalFreq)});
+			}
+		}
+	}
+
 
     var handleTwitchMsg = function(msg) {
         var timestamp = msg.querySelector("span.timestamp").textContent
@@ -142,13 +176,14 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     		var structure = document.createElement("div");
     		// structure.style.visibility = "hidden";
     		structure.setAttribute("id","dataviz");
-    		var styling = "position:absolute;top:50%;left:50%;margin-top:-250px;margin-left:-400px;width:550px;height:420px;z-index:9002;border-radius:3px;border: 1px solid #000;background-color:mintcream;padding-right:100px";
+    		var styling = "position:absolute;top:50%;left:50%;margin-top:-250px;margin-left:-400px;width:450px;height:350px;z-index:9002;border-radius:3px;border: 1px solid #000;background-color:mintcream;cursor:pointer;";
     		structure.setAttribute("style", styling);
 			sentiment = document.createElement("div");
 			sentiment.setAttribute("id","sent");
     		structure.appendChild(sentiment);
     		var top = document.getElementsByTagName("body")[0];
     		if(top) top.appendChild(structure);
+    		setupDrag();
     	}
     	return sentiment;
     }
@@ -159,14 +194,14 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 		pie = new d3pie(construct, {
 			"header": {
 				"title": {
-					"text": "What people are feeling",
-					"fontSize": 22,
+					"text": "What people are feeling / thinking",
+					"fontSize": 20,
 					"font": "verdana"
 				},
 				"subtitle": {
 					"text": "General sentiment by the minute",
 					"color": "#999999",
-					"fontSize": 10,
+					"fontSize": 9,
 					"font": "verdana"
 				},
 				"titleSubtitlePadding": 12
@@ -179,9 +214,9 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 				"location": "bottom-center"
 			},
 			"size": {
-				"canvasHeight": 400,
-				"canvasWidth": 590,
-				"pieOuterRadius": "96%"
+				"canvasHeight": 300,
+				"canvasWidth": 443,
+				"pieOuterRadius": "100%"
 			},
 			"data": {
 				"content": analytics
@@ -195,7 +230,7 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 				"percentage": {
 					"color": "#ffffff",
 					"font": "verdana",
-					"fontSize": 11,
+					"fontSize": 10,
 					"decimalPlaces": 0
 				},
 				"value": {
@@ -212,7 +247,7 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 			},
 			"effects": {
 				"load": {
-					"speed": 450
+					"effect": "none"
 				},
 				"pullOutSegmentOnClick": {
 					"effect": "linear",
@@ -224,7 +259,7 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 				"colors": {
 					"segmentStroke": "",
 					segments: [
-						"#4D4D4D","#5DA5DA","#FAA43A","#60BD68","#F17CB0","#B2912F","#B276B2","#DECF3F","#F15854"
+						"#5DA5DA","#FAA43A","#60BD68","#F17CB0","#B2912F","#B276B2","#DECF3F","#F15854","#2ECCC4"
 					]
 				},
 				"canvasPadding": {
@@ -239,7 +274,6 @@ we're looking for: <li class="message-line chat-line ember-view"> */
         if(curStream != oldStream){
             oldStream = curStream;
             getChatBoxElement("ul.chat-lines");
-
         }
         oldStream = window.location.href;
         setTimeout(function() {
@@ -249,3 +283,30 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 
     checkChangedStream();
     
+	//Lines 54 - 77 credit jnoreiga stackoverflow; http://stackoverflow.com/questions/9334084/moveable-draggable-div
+	var x_pos = 0, y_pos = 0;
+	function setupDrag() {
+	  var sent = document.getElementById('dataviz');
+	  sent.addEventListener('mousedown', mouseDown, false);
+	  window.addEventListener('mouseup', mouseUp, false);
+	}
+
+	function mouseUp() {
+	  window.removeEventListener('mousemove', divMove, true);
+	}
+
+	function mouseDown(e) {
+		if(cursize == false) {
+			var div = document.getElementById('dataviz');
+			x_pos = e.clientX - div.offsetLeft;
+			y_pos = e.clientY - div.offsetTop;
+			window.addEventListener('mousemove', divMove, true);
+		}
+	}
+
+	function divMove(e) {
+	  var div = document.getElementById('dataviz');
+	  div.style.position = 'absolute';
+	  div.style.top = (e.clientY - y_pos) + 'px';
+	  div.style.left = (e.clientX - x_pos) + 'px';
+	}
