@@ -88,6 +88,7 @@
             if(sentChart != null){
             	setupChart(sentChart);
             }            
+            console.log(getCurUser());
         } else {
             setTimeout(function() {
                 getChatBoxElement(main);

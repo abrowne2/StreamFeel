@@ -23,9 +23,17 @@ function setupDataViz() {
 	return sentiment;
 }
 
-//arbitrary dummy data for the chart rendering.
-var analytics = [{ label: "1", value: 6 },{ label: "2", value: 4 },{ label: "3", value: 3 },{label:"4",value:2},
-					{label:"5",value:1},{label:"6",value:5},{label:"7",value:7},{label:"8",value:3},{label:"9",value:9}];
+function getCurUser() {
+	if(document.querySelector("div.js-chat-display") != null){
+		var dis = document.querySelector("div.js-chat-display");
+		dis = dis.getElementsByClassName("chat-menu-content")[1];
+		return dis.getElementsByClassName("strong")[0];
+	} else {
+		setTimeout(function() {
+			getCurUser();
+		}, 250)
+	}
+}
 
 
 function chartSettings() {
@@ -57,7 +65,7 @@ function chartSettings() {
 			"pieOuterRadius": "100%"
 		},
 		"data": {
-			"content": analytics
+			"content": []
 		},
 		"labels": {
 			"outer": {
