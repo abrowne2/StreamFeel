@@ -1,13 +1,7 @@
 /* Copyright (c) 2017 Adam Browne
  * Inject.js is the content script which analyzes twitch. */
 
-/* To observe the new messages, we need to use a MutationObserver
-* and then apply a queryselector to get the new message added:
-we're looking for: <li class="message-line chat-line ember-view"> */
-	var toggle_filter = false, cursize = false, pie = null, curTimestamp, prevTime;
-	var setting = 0;
-	//have to populate this with dictionaries regarding commands, emoji's, and sentiment.
-	/* Analytics dict: (By timestamp.) */
+	var toggle_filter = false, pie = null, curTimestamp, prevTime, setting = 0;
 	//have three arrays, of which 0 (sentiment), 1 (command), 2 (emoji)
 	var analData = {};
 	var analytics = [
@@ -23,10 +17,6 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 	  {label:"9",value:9}
 	];
 
-	/* DataViz Storage Mechanism
-	 * Store each by timestamp dict; inside the dict have the respective point of analytics.
-	 * ["8:05"] => 
-	*/
     //listener to the popup menu. We listen to it's instructions.
     chrome.runtime.onMessage.addListener(function(response){
         if(response == "tf")
@@ -50,12 +40,12 @@ we're looking for: <li class="message-line chat-line ember-view"> */
     });
 
     function storeAnalyticsData(data){
+    	//sent, emoji, and commands storage
     	if(!(data[1] in analData) == true){
-    		//sent, cmd, emoji storage    		
     		analData[data[1]] = [[],[],[],{}];
     	}
         if(data[4] != "") { //sentiment analytics
-        	var sent = data[4]; //get the actual sentiment.
+        	var sent = data[4]; 
         	if(!(sent in analData[data[1]][3]) == true) {
         		analData[data[1]][3][sent] = 1;
         	} else {
@@ -116,11 +106,10 @@ we're looking for: <li class="message-line chat-line ember-view"> */
         }
     }
 
-    var need = []; 
-    var handled = [];
-    /* to setup the message listener, we have to first get the "ul.chat-lines" element.
-     * this is added dynamically, so we'll use a mutation observer to get it, disconnect that observer,
-     * and then begin listening to chat messages. */
+    var need = [], handled = [];
+	/* To observe the new messages, we need to use a MutationObserver
+	* and then apply a queryselector to get the new message added:
+	we're looking for: <li class="message-line chat-line ember-view"> */
     var setupMessageListener = function(chat_box) {
         var observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
@@ -282,7 +271,7 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 
     checkChangedStream();
     
-	//Lines 54 - 77 credit jnoreiga stackoverflow; http://stackoverflow.com/questions/9334084/moveable-draggable-div
+	//Lines 54-77 credit jnoreiga; http://stackoverflow.com/questions/9334084/moveable-draggable-div
 	var x_pos = 0, y_pos = 0;
 	function setupDrag() {
 	  var sent = document.getElementById('dataviz');
@@ -295,12 +284,10 @@ we're looking for: <li class="message-line chat-line ember-view"> */
 	}
 
 	function mouseDown(e) {
-		if(cursize == false) {
-			var div = document.getElementById('dataviz');
-			x_pos = e.clientX - div.offsetLeft;
-			y_pos = e.clientY - div.offsetTop;
-			window.addEventListener('mousemove', divMove, true);
-		}
+		var div = document.getElementById('dataviz');
+		x_pos = e.clientX - div.offsetLeft;
+		y_pos = e.clientY - div.offsetTop;
+		window.addEventListener('mousemove', divMove, true);
 	}
 
 	function divMove(e) {
