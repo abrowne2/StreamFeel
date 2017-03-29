@@ -25,6 +25,7 @@ function setupDataViz() {
 	return sentiment;
 }
 
+
 function getCurUser() {
 	if(document.querySelector("div.js-chat-display") != null){
 		var dis = document.querySelector("div.js-chat-display");
