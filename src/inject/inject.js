@@ -15,9 +15,8 @@
     var port = chrome.runtime.connect({name: "handler"});
     port.onMessage.addListener(function(message){
         var data = message.split("|");
-        console.log(data);
         var target_msg = document.getElementById(data[0]);
-        if(data[4] == "1") {
+        if(data[4] == "1" || data[2] == current_user) {
             try {
                 target_msg.setAttribute("style", "display:block;visibility:visible;");
             } catch(err) {}

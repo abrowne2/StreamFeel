@@ -160,13 +160,18 @@ struct StreamMessage {
 		msg = new_msg;
 	}
 
+	// a more stricter comparison to determine if nightbot command.
+	bool strictCmdComp(int next){
+		return msg[next] != ' ' && msg[next] != '!' && msg[next] != '?';
+	}
+
 	/* naive approach to determine if the message was a command:
 	 * If the next character after the '!' isn't a space, it could be one. 
 	 * We also extract the command from the message to examine them. */
 	void determineCommand() {
 		auto exclamation = msg.find("!");
 		if(exclamation != std::string::npos && exclamation + 1 < msg.size()){
-			cmdMsg = msg[exclamation+1] != ' '? true: false;
+			cmdMsg = strictCmdComp(exclamation+1);
 			//extract the command for use in analytics.			
 			if(cmdMsg == true){
 				int begin = exclamation + 1, end = msg.find(" ",begin);
