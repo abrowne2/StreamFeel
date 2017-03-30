@@ -4,7 +4,6 @@
 //NOTES to self: If no data for timestamp, don't render it.
 
 	var toggle_filter = false, pie = null, curTimestamp, prevTime, setting = 0;
-	//have three arrays, of which 0 (sentiment), 1 (command), 2 (emoji)
 	var analData = {};
     //listener to the popup menu. We listen to it's instructions.
     chrome.runtime.onMessage.addListener(function(response){
@@ -14,9 +13,12 @@
 
     var port = chrome.runtime.connect({name: "handler"});
     port.onMessage.addListener(function(message){
-        var data = message.split("|");
+        var data = message.split("|"), user;
         var target_msg = document.getElementById(data[0]);
-        if(data[4] == "1" || data[2] == current_user) {
+        try {
+        	user = data[2].toLowerCase();
+        } catch(err) { }
+        if(data[4] == "1" || user == current_user) {
             try {
                 target_msg.setAttribute("style", "display:block;visibility:visible;");
             } catch(err) {}
@@ -77,6 +79,7 @@
         var timestamp = msg.querySelector("span.timestamp").textContent
         var user = msg.querySelector("span.from").textContent
         var message = msg.querySelector("span.message").textContent.trim()
+        console.log(message)
         var identifier = msg.id;
         port.postMessage({id: identifier, time: timestamp, usr: user, curusr: current_user, data: message});
     }
@@ -111,6 +114,9 @@
 	                        identifier = newTwitchMsg.id;
 	                    } else {
 	                        identifier = newTwitchMsg.getAttribute("data-id"); //better twitch tv
+	                        if(identifier == "undefined") { //an admin message.
+	                        	newTwitchMsg.setAttribute("style", "display:block;visibility:visible;");
+	                        }
 	                        isValid = false;
 	                    }                
 	                    if(handled.includes(identifier) == false){
