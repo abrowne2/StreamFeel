@@ -4,7 +4,7 @@
 //NOTES to self: If no data for timestamp, don't render it.
 
 	var toggle_filter = false, pie = null, curTimestamp, prevTime, setting = 0;
-	var analData = {};
+	var analData = {}, emote_map = {};
     //listener to the popup menu. We listen to it's instructions.
     chrome.runtime.onMessage.addListener(function(response){
         if(response == "tf")
@@ -18,70 +18,142 @@
         try {
         	user = data[2].toLowerCase();
         } catch(err) { }
-        if(data[4] == "1" || user == current_user) {
-            try {
-                target_msg.setAttribute("style", "display:block;visibility:visible;");
-            } catch(err) {}
-        } else {
-            try {
-                target_msg.setAttribute("style", "display:none;visibility:hidden;");
-            } catch(err) {}
-        }
+        try {
+	        if(data[4] == "1" || user == current_user) {
+				target_msg.setAttribute("style", "display:block;visibility:visible;");
+	        } else {
+				target_msg.setAttribute("style", "display:none;visibility:hidden;");
+	        }
+	    } catch(err) { }
         storeAnalyticsData(data);        
     });
 
+
+    var qd_emotes = {};
+
+    function enqueueEmote(label, time){
+    	if(!(time in analData == true)){
+    		if(!(time in qd_emotes) == true){
+    			qd_emotes[time] = [];
+    			qd_emotes[time].push("." + label);
+    		} else {
+    			qd_emotes[time].push("." + label);
+    		}
+    	} else {
+    		analData[time].storeRecord("." + label);
+    	}
+    }
+
+    function parseEmotes(message, time){
+    	var emotes = message.getElementsByTagName("img");
+    	for(var i=0; i<emotes.length; ++i) {
+    		var current_emote = emotes[i];
+			var textRep = current_emote.getAttribute("alt");
+			if(!(textRep in emote_map) == true) 
+				emote_map[textRep] = current_emote.getAttribute("src");
+			enqueueEmote(textRep, time);
+		}
+    }
+
+	function StreamData() {
+    	this.freq = {}, this.sent = [];
+		this.cmd = [], this.emote = [];
+    	
+    	this.storeRecord = function(label) {
+    		if(!(label in this.freq) == true)
+    			this.freq[label] = 1;
+    		else
+    			++this.freq[label];
+    	}
+
+    	this.isSentType = function(key,parameter){
+			return parameter == "" && key[0] != "!" && key[0] != ".";
+		}
+
+    	this.desiredKeys = function(type){
+			var parameter = type == "cmd"? "!": 
+				type == "e"? ".": "";
+			var output = [];
+			for(var key in this.freq){
+    			if(parameter == key[0]){
+    				output.push(key);
+    			} else if(this.isSentType(key,parameter) == true){
+    				output.push(key);
+    			}
+			}
+			return output;
+    	}
+
+    	this.getTypeTotal = function(type_keys) {
+    		var total = 1;
+    		for(var key in type_keys){
+    			if(this.freq.hasOwnProperty(key)){
+    				total += this.freq[key];
+    			}
+    		}
+    		return total;
+    	}
+
+    	this.updateDataFreq = function(type){
+    		var type_keys = this.desiredKeys(type), totalFreq = this.getTypeTotal(type_keys);
+    		type == "cmd"? this.cmd = []: type == "e"? this.emote = []: this.sent = [];
+    		for(var key in type_keys){
+    			var actual = type_keys[key];
+    			if(this.freq.hasOwnProperty(actual)){
+					var val = this.freq[actual];
+					if(type == "cmd")
+						this.cmd.push({label: actual, value: (val / totalFreq)});
+					else if(type == "e"){
+						//complete emoji image labels
+					} else {
+						this.sent.push({label: actual, value: (val / totalFreq)});
+					}
+    			}
+    		}
+    	}
+    }
+
     function storeAnalyticsData(data){
-    	//sent, emoji, and commands storage
-    	if(!(data[1] in analData) == true){
-    		analData[data[1]] = [[],[],[],{}];
+    	var cur_time = data[1], record;
+    	if(!(cur_time in analData) == true){
+    		analData[cur_time] = new StreamData();
+	    	if(!(cur_time in qd_emotes) == false && qd_emotes[cur_time].length > 0){
+	    		while(qd_emotes[cur_time].length > 0){
+	    			var emote = qd_emotes[cur_time].shift();
+	    			analData[cur_time].storeRecord(emote);
+	    		}
+	    		analData[cur_time].updateDataFreq("e");
+	    	}
     	}
         if(data[5] != "") { //sentiment analytics
-        	var sent = data[5]; 
-        	if(!(sent in analData[data[1]][3]) == true) {
-        		analData[data[1]][3][sent] = 1;
-        	} else {
-        		++analData[data[1]][3][sent];
-        	}
-        	updateDataFreq(0,data[1]);
+			record = data[5]; 
+			analData[cur_time].storeRecord(record);
+			analData[cur_time].updateDataFreq(" ");        			
         } else { //command analytics
-        	//do nothing.
+        	//finish this
         }
-        if(curTimestamp != data[1]) {
-        	curTimestamp = data[1];
+        if(curTimestamp != cur_time) {
+        	curTimestamp = cur_time;
         }
-		pie.updateProp("data.content",analData[curTimestamp][setting]);        
+		pie.updateProp("data.content",analData[curTimestamp].sent);        
     }
-	//it's guaranteed this won't be 0 at the end of this program,...
-    function calcTotal(time){
-    	var total = 1; 
-		for(var key in analData[time][3]){
-			if(analData[time][3].hasOwnProperty(key)){
-				total += analData[time][3][key];
-			}
-		}
-		return total;
-    }
-
-    function updateDataFreq(type,time){
-    	//we don't need the previous contents, we have the frequencies.
-		analData[time][type] = [];
-		var totalFreq = calcTotal(time);
-		for(var key in analData[time][3]){
-			if(analData[time][3].hasOwnProperty(key)){
-				var val = analData[time][3][key];
-				analData[time][type].push({label: key, value: (val / totalFreq)});
-			}
-		}
-	}
-
 
     var handleTwitchMsg = function(msg) {
         var timestamp = msg.querySelector("span.timestamp").textContent
         var user = msg.querySelector("span.from").textContent
-        var message = msg.querySelector("span.message").textContent.trim()
-        console.log(message)
-        var identifier = msg.id;
-        port.postMessage({id: identifier, time: timestamp, usr: user, curusr: current_user, data: message});
+        var message = msg.querySelector("span.message")
+        parseEmotes(message, timestamp);        
+        if(message.hasAttribute("data-raw") == true){ //better twitch tv
+        	try {
+        		var raw_msg = decodeURIComponent(message.getAttribute("data-raw"));
+        		message = raw_msg.trim();
+        	} catch(err) { 
+        		message = message.textContent.trim();
+        	}
+        } else {
+        	message = message.textContent.trim();
+        }
+        port.postMessage({id: msg.id, time: timestamp, usr: user, curusr: current_user, data: message});
     }
     
     var getChatBoxElement = function(main) {
@@ -153,7 +225,6 @@
         }
     }
 
-
     function setupChart(construct) {
     	pie = new d3pie(construct, chartSettings());
     }
@@ -172,4 +243,3 @@
     }
 
     checkChangedStream();
-    

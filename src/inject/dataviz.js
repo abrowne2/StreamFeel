@@ -42,7 +42,7 @@ function chartSettings() {
 	return {
 		"header": {
 			"title": {
-				"text": "What people are feeling / thinking",
+				"text": "What are people feeling or thinking?",
 				"fontSize": 20,
 				"font": "verdana"
 			},
