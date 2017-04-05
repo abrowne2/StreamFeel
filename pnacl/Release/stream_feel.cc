@@ -39,10 +39,12 @@ struct serializedData {
 	std::vector<Block> blocks;
 	std::vector<char> main_buffer;
 
-	serializedData(int choice){
-		int accum = (choice == 0? 0: 8), bound = accum + 8;
-		while(accum++ != bound)
+	serializedData() {
+		int accum = 0;
+		while(accum != 8){
 			blocks.push_back(Block());
+			++accum;
+		}
 	}
 
 	bool needsFusion() const {
@@ -76,8 +78,7 @@ struct dataClassifier {
 	//categorizers for sentiment and relevance.
 	text_categorizer drelevant, sentiment; 
 	bool isTrained = false;
-	serializedData rel_raw = serializedData(0);
-	serializedData sent_raw = serializedData(1);
+	serializedData rel_raw, sent_raw;
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -114,6 +115,7 @@ struct dataClassifier {
 		if(offset >= 0 && offset <= 7){
 			rel_raw.populateBlock(data, offset);
 		} else {
+			offset -= 8;
 			sent_raw.populateBlock(data, offset);
 		}
 	}
