@@ -300,16 +300,14 @@ struct responseFormatter {
 
 	//important function that handles the construction of text categorizers in our classifiers.
 	void handleFusion() {
-		if(RC.rel_raw.fused == true && RC.rel_raw.trained == false){
-			RC.decodeStream('r',RC.rel_raw.main_buffer);
-			RC.rel_raw.trained = true;
-		} else if(RC.sent_raw.fused == true && RC.sent_raw.trained == false){
-			RC.decodeStream('s',RC.sent_raw.main_buffer);
-			RC.sent_raw.trained = true;
-		} else if(RC.rel_raw.needsFusion() == true){
+		if(RC.rel_raw.needsFusion() == true){
 			RC.rel_raw.fuseBuffer();
+			RC.decodeStream('r',RC.rel_raw.main_buffer);
+			RC.rel_raw.trained = true;			
 		} else if(RC.sent_raw.needsFusion() == true){
 			RC.sent_raw.fuseBuffer();
+			RC.decodeStream('s',RC.sent_raw.main_buffer);
+			RC.sent_raw.trained = true;			
 		} else if(RC.rel_raw.trained == true && RC.sent_raw.trained == true){
 			RC.isTrained = true;
 		}
