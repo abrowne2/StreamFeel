@@ -35,7 +35,7 @@ struct Block {
 };
 
 struct serializedData {
-	bool fused = false, trained = false;
+	bool trained = false;
 	std::vector<Block> blocks;
 	std::vector<char> main_buffer;
 
@@ -51,10 +51,10 @@ struct serializedData {
 		for(int i = 0; i<blocks.size(); ++i)
 			if(blocks[i].populated == false)
 				return false;
-		return (fused == false);
+		return true;
 	}
 
-	void populateBlock(pp::VarArray& data, int offset){
+	bool populateBlock(pp::VarArray& data, int offset){
 		int index = 1, size = data.GetLength();
 		while(index < size){
 			char byte = data.Get(index).AsInt();
@@ -62,6 +62,7 @@ struct serializedData {
 			++index;
 		}
 		blocks[offset].populated = true;
+		return needsFusion();
 	}
 
 	//takes all the chunks and fuses them into a singular buffer.
@@ -70,7 +71,6 @@ struct serializedData {
 			for(char c : blocks[i].container)
 				main_buffer.push_back(c);
 		blocks.clear();
-		fused = true;
 	}
 };
 
@@ -113,10 +113,20 @@ struct dataClassifier {
 	void buildCategorizer(pp::VarArray& data){
 		int offset = data.Get(0).AsInt();
 		if(offset >= 0 && offset <= 7){
-			rel_raw.populateBlock(data, offset);
+			bool cont = rel_raw.populateBlock(data, offset);
+			if(cont == true){
+				rel_raw.fuseBuffer();
+				decodeStream('r',rel_raw.main_buffer);
+				rel_raw.trained = true;
+			}
 		} else {
 			offset -= 8;
-			sent_raw.populateBlock(data, offset);
+			bool cont = sent_raw.populateBlock(data, offset);
+			if(cont == true){
+				sent_raw.fuseBuffer();
+				decodeStream('s',sent_raw.main_buffer);
+				sent_raw.trained = true;
+			}
 		}
 	}
 
@@ -299,18 +309,9 @@ struct responseFormatter {
 	}
 
 	//important function that handles the construction of text categorizers in our classifiers.
-	void handleFusion() {
-		if(RC.rel_raw.needsFusion() == true){
-			RC.rel_raw.fuseBuffer();
-			RC.decodeStream('r',RC.rel_raw.main_buffer);
-			RC.rel_raw.trained = true;			
-		} else if(RC.sent_raw.needsFusion() == true){
-			RC.sent_raw.fuseBuffer();
-			RC.decodeStream('s',RC.sent_raw.main_buffer);
-			RC.sent_raw.trained = true;			
-		} else if(RC.rel_raw.trained == true && RC.sent_raw.trained == true){
+	void checkState() {
+		if(RC.rel_raw.trained == true && RC.sent_raw.trained == true)
 			RC.isTrained = true;
-		}
 	}
 };
 
@@ -336,12 +337,12 @@ class StreamFeelModInstance : public pp::Instance {
       }
       return;
     }
+    RF.checkState();
 	// ID | Time | From | Rel | Sentiment | Command | Msg  <-- Response Format
 	std::string message = var_message.AsString();
 	StreamMessage parsed = StreamMessage(message); 
 	if(RF.isReady() == false){
 		RF.addMessage(parsed);
-		RF.handleFusion();
 	} else if(!RF.backlog.empty() && RF.isReady() == true){
 		RF.addMessage(parsed);
 		std::vector<std::string> handle = RF.unload();
