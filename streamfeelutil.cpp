@@ -125,27 +125,25 @@ void displayMenu() {
 	std::cout << "5. Display Menu\n";
 }
 
-//after testing, I've discovered the sentiment dataset is so large it must be split into chunks.
+
+
+/* SegmenData breaks up the entire serialized buffer into eight different chunks
+ * They're subsequently interpreted by the native client module. */
 void segmentData(std::vector<char>& buffer, std::string& updated_data, char choice){
-	if(choice == 'r'){
-		for(int byte : buffer)
-			updated_data += (to_string(byte) + ",");
-		updated_data.pop_back();
-		updated_data += "\n];";			
-	} else {
-		//for sentiment, we must segment it into two chunks.
-		for(int i = 0; i < buffer.size() / 2; ++i){
-			int byte = buffer[i];
-			updated_data += (to_string(byte) + ",");
-		}
-		updated_data.pop_back();
-		updated_data += "\n];\n\nvar sentiment2 = [\n2,";
-		for(int i = buffer.size() / 2; i < buffer.size(); ++i){
-			int byte = buffer[i];
+	int index = 0, origBound = buffer.size() / 8, curBound;
+	curBound = origBound;
+	int curOffset = choice == 'r'? 0: 8; 
+	std::string type = choice == 'r'? "relevance_data": "sentiment";
+	while(index != buffer.size()){
+		std::string offset = to_string(curOffset++);
+		updated_data += ("\nvar " + type + offset + " = [\n" + offset + ",");
+		for(; index < curBound; ++index){
+			int byte = buffer[index];
 			updated_data += (to_string(byte) + ",");
 		}
 		updated_data.pop_back();
 		updated_data += "\n];";
+		curBound = origBound + curBound;
 	}
 }
 
@@ -155,15 +153,13 @@ void segmentData(std::vector<char>& buffer, std::string& updated_data, char choi
 void updateDataset(char choice){
 	//get the trained buffer (raw representation of the model)
 	std::vector<char> buffer = serialize(choice);
-	std::string var_name, file_name;
+	std::string file_name;
 	if(choice == 'r'){
-		var_name = "relevance_data = [\n0,";
 		file_name = "/Users/adambrowne/Desktop/Personal/StreamFeel/src/inject/default.js";
 	} else {
-		var_name = "sentiment = [\n1,";
 		file_name = "/Users/adambrowne/Desktop/Personal/StreamFeel/src/inject/sentiment.js";
 	}
-	std::string updated_data = "var " + var_name;
+	std::string updated_data;
 	segmentData(buffer,updated_data,choice);
 	std::ofstream dataWriter(file_name);
 	dataWriter << updated_data;

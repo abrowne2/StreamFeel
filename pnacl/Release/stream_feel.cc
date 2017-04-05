@@ -21,10 +21,63 @@
 using namespace mitie;
 using namespace dlib;
 
+/* a block contains a vector of type <char> and a boolean value to determine
+ * if it's entire contents have been received. This is to ensure that we can decode. */
+struct Block {
+	std::vector<char> container;
+	bool populated = false;
+
+	Block() = default;
+
+	void storeByte(char c) {
+		container.push_back(c);
+	}
+};
+
+struct serializedData {
+	bool fused = false, trained = false;
+	std::vector<Block> blocks;
+	std::vector<char> main_buffer;
+
+	serializedData(int choice){
+		int accum = (choice == 0? 0: 8), bound = accum + 8;
+		while(accum++ != bound)
+			blocks.push_back(Block());
+	}
+
+	bool needsFusion() const {
+		for(int i = 0; i<blocks.size(); ++i)
+			if(blocks[i].populated == false)
+				return false;
+		return (fused == false);
+	}
+
+	void populateBlock(pp::VarArray& data, int offset){
+		int index = 1, size = data.GetLength();
+		while(index < size){
+			char byte = data.Get(index).AsInt();
+			blocks[offset].storeByte(byte);
+			++index;
+		}
+		blocks[offset].populated = true;
+	}
+
+	//takes all the chunks and fuses them into a singular buffer.
+	void fuseBuffer() {
+		for(int i = 0; i<blocks.size(); ++i)
+			for(char c : blocks[i].container)
+				main_buffer.push_back(c);
+		blocks.clear();
+		fused = true;
+	}
+};
+
 struct dataClassifier {
 	//categorizers for sentiment and relevance.
 	text_categorizer drelevant, sentiment; 
 	bool isTrained = false;
+	serializedData rel_raw = serializedData(0);
+	serializedData sent_raw = serializedData(1);
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -53,31 +106,15 @@ struct dataClassifier {
 		return tokens;
 	}
 
-	void buildBuffer(pp::VarArray& data, std::vector<char>& buffer){
-		int index = 1, size = data.GetLength();
-		while(index < size){
-			char byte = data.Get(index).AsInt();
-			buffer.push_back(byte);
-			++index;
-		}
-	}
-
 	/* We're receiving the entire trained model as binary.
 	 * We parse the binary into it's representation, create a 
 	 * vectorstream and decode the stream into the categorizer. */
-	void buildCategorizer(pp::VarArray& data, std::vector<char>& buf, int inst_id){
-		auto inst = pp::Instance(inst_id); 
-		int choice = data.Get(0).AsInt();
-		if(choice == 0){
-			buildBuffer(data, buf);
-			decodeStream('r',buf);
-		} else if(choice == 1){
-			buildBuffer(data,buf);
-			inst.PostMessage(pp::Var("f")); //tells them to send second chunk.
-		} else if(choice == 2){
-			buildBuffer(data,buf);
-			decodeStream('s',buf);
-			isTrained = true;
+	void buildCategorizer(pp::VarArray& data){
+		int offset = data.Get(0).AsInt();
+		if(offset >= 0 && offset <= 7){
+			rel_raw.populateBlock(data, offset);
+		} else {
+			sent_raw.populateBlock(data, offset);
 		}
 	}
 
@@ -255,17 +292,32 @@ struct responseFormatter {
 		return response;
 	}
 
-	void processData(pp::VarArray& data, std::vector<char>& buf, int inst_id) {
-		RC.buildCategorizer(data,buf,inst_id);
+	void processData(pp::VarArray& data) {
+		RC.buildCategorizer(data);
 	}
 
+	//important function that handles the construction of text categorizers in our classifiers.
+	void handleFusion() {
+		if(RC.rel_raw.fused == true && RC.rel_raw.trained == false){
+			RC.decodeStream('r',RC.rel_raw.main_buffer);
+			RC.rel_raw.trained = true;
+		} else if(RC.sent_raw.fused == true && RC.sent_raw.trained == false){
+			RC.decodeStream('s',RC.sent_raw.main_buffer);
+			RC.sent_raw.trained = true;
+		} else if(RC.rel_raw.needsFusion() == true){
+			RC.rel_raw.fuseBuffer();
+		} else if(RC.sent_raw.needsFusion() == true){
+			RC.sent_raw.fuseBuffer();
+		} else if(RC.rel_raw.trained == true && RC.sent_raw.trained == true){
+			RC.isTrained = true;
+		}
+	}
 };
 
 
 //namespace referenced by the below instance.
 namespace {
 	responseFormatter RF;
-	std::vector<char> cat_buf;
 }
 
 class StreamFeelModInstance : public pp::Instance {
@@ -278,10 +330,9 @@ class StreamFeelModInstance : public pp::Instance {
     // Ignore the message if it is not a string.
     if (!var_message.is_string()){
       if(var_message.is_array()){
-      	int inst_id = pp_instance();
 		auto val = pp::VarArray(var_message);
 		//loads our containers and trains the classifier.
-		RF.processData(val,cat_buf,inst_id);
+		RF.processData(val);
       }
       return;
     }
@@ -290,6 +341,7 @@ class StreamFeelModInstance : public pp::Instance {
 	StreamMessage parsed = StreamMessage(message); 
 	if(RF.isReady() == false){
 		RF.addMessage(parsed);
+		RF.handleFusion();
 	} else if(!RF.backlog.empty() && RF.isReady() == true){
 		RF.addMessage(parsed);
 		std::vector<std::string> handle = RF.unload();

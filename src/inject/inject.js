@@ -142,7 +142,9 @@ function storeAnalyticsData(data) {
         analData[cur_time].storeRecord(record);
         analData[cur_time].updateDataFreq(" ");
     } else { //command analytics
-
+        record = data[6];
+        analData[cur_time].storeRecord(record);
+        analData[cur_time].updateDataFreq("cmd");
     }
     if (curTimestamp != cur_time) {
         curTimestamp = cur_time;

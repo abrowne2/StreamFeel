@@ -15,7 +15,6 @@ function moduleDidLoad() {
   // Once we load, hide the plugin. In this example, we don't display anything
   // in the plugin, so it is fine to hide it.
   common.hideModule();
-  //post both datasets to the module to build the categorizers.
   common.naclModule.postMessage(trainRelevance());
   common.naclModule.postMessage(firstSentChunk());
 }
