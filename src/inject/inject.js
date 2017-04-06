@@ -28,6 +28,7 @@ port.onMessage.addListener(function(message) {
             target_msg.setAttribute("style", "display:block;visibility:visible;");
         } else {
             target_msg.setAttribute("style", "display:none;visibility:hidden;");
+            target_msg.remove();
         }
     } catch (err) {}
     storeAnalyticsData(data);
