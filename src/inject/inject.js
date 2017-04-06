@@ -5,7 +5,8 @@ var toggle_filter = false,
     pie = null,
     curTimestamp, prevTime, setting = 0;
 var analData = {},
-    emote_map = {};
+    emote_map = {},
+    qd_emotes = {};
 //listener to the popup menu. We listen to it's instructions.
 chrome.runtime.onMessage.addListener(function(response) {
     if (response == "tf")
@@ -31,9 +32,6 @@ port.onMessage.addListener(function(message) {
     } catch (err) {}
     storeAnalyticsData(data);
 });
-
-
-var qd_emotes = {};
 
 function enqueueEmote(label, time) {
     if (!(time in analData == true)) {
@@ -149,7 +147,16 @@ function storeAnalyticsData(data) {
     if (curTimestamp != cur_time) {
         curTimestamp = cur_time;
     }
-    pie.updateProp("data.content", analData[curTimestamp].sent);
+    var lbls = [], dta = [];
+    var curData = (setting == 0? analData[curTimestamp].sent: setting == 1? analData[curTimestamp].cmd:
+        analData[curTimestamp].emote);
+    for(var record in curData){
+        lbls.push(curData[record].label);
+        dta.push(curData[record].value);
+    }
+    pie.data.labels = lbls;
+    pie.data.datasets[0].data = dta;
+    pie.update();
 }
 
 var handleTwitchMsg = function(msg) {
@@ -250,7 +257,7 @@ function toggleFilter() {
 }
 
 function setupChart(construct) {
-    pie = new d3pie(construct, chartSettings());
+    pie = new Chart(construct, chartSettings());
 }
 
 var oldStream = "";
