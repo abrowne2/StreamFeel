@@ -9,10 +9,7 @@ StreamFeel will be a chrome browser extension intended to solve twitch chat's in
 It uses a form of machine learning: specifically multiclass linear SVM classification as well as natural language processing (sentimental analysis) using MITIE (MIT's Information Extraction Tools / Library) which is built on top of dlib, a high performance machine learning library (verbatim: https://github.com/mit-nlp/MITIE). 
 
 Additionally, for data visualization;
-* **d3.js**
-(Copyright Mike Bostock)
-* **d3pie**
-(Copyright Benjamin Keen)
+* **Chart.js** Copyright (c) Nick Downie
 
 ### Important files
 * **stream_feel.cc** (pnacl/Release)
