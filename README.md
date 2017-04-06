@@ -22,7 +22,7 @@ the native client module to use for classification
 ### Technical Challenges Addressed
 * More than I can count with fingers and toes
 
-### Technical Jargon (with some help)
+### Technical Jargon (How)
 
 It uses a form of machine learning: specifically multiclass linear SVM classification as well as natural language processing (sentimental analysis) using MITIE (MIT's Information Extraction Tools / Library) which is built on top of dlib, a high performance machine learning library (verbatim: https://github.com/mit-nlp/MITIE). 
 
