@@ -2,7 +2,7 @@
  * Dataviz.js sets up the data visualization (analytics), for 
  * commands, emojis, and sentiment. */
 
-var styling = "position:absolute;top:50%;left:50%;margin-top:-250px;margin-left:-400px;width:450px;height:350px;z-index:9002; +\
+var styling = "position:absolute;top:50%;left:50%;margin-top:-250px;margin-left:-400px;width:425px;height:250px;z-index:9002; +\
 				border-radius:3px;border: 1px solid #000;background-color:mintcream;cursor:pointer;";
 
 var current_user = "";
@@ -12,7 +12,6 @@ function setupDataViz() {
 	var sentiment = null;
 	if(frame == "" || frame == "undefined" || frame == null){
 		var structure = document.createElement("div");
-		// structure.style.visibility = "hidden";
 		structure.setAttribute("id","dataviz");
 		structure.setAttribute("style", styling);
 		sentiment = document.createElement("canvas");
@@ -23,6 +22,7 @@ function setupDataViz() {
 		var top = document.getElementsByTagName("body")[0];
 		if(top) top.appendChild(structure);
 		setupDrag();
+		document.getElementById("dataviz").style.visibility = "hidden";
 	}
 	return sentiment;
 }
@@ -40,17 +40,36 @@ function getCurUser() {
 }
 
 function chartSettings() {
+	// // var newc = document.createElement("canvas");
+	// // drawer = newc.getContext("2d");
+	// // var img = new Image();
+	// // img.src = "https://static-cdn.jtvnw.net/emoticons/v1/2/1.0";
+	// img.onload = function() {
+	// 	var pattern = drawer.createPattern(img, 'repeat');
+	// }		
 	return {
 		type: "pie",
 		data: {
 			labels: [],
 			datasets: [{
-				label: "Overall Sentiment",
 				data: [],
 				backgroundColor: ["#5DA5DA","#FAA43A","#60BD68","#F17CB0","#B2912F",
 				"#B276B2","#DECF3F","#F15854","#2ECCC4"],
-				borderWidth: 1
+				borderWidth: 0
 			}]
+		},
+		options: {
+			title: {
+				display: true,
+				text: "What are people thinking or feeling?"
+			},
+			legend: {
+				position: "right",
+				labels: {
+					boxWidth: 20,
+					padding: 5
+				}
+			}
 		}
 	};
 }

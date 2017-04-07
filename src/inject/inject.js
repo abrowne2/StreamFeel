@@ -2,15 +2,19 @@
  * Inject.js is the content script which analyzes twitch. */
 //NOTES to self: If no data for timestamp, don't render it.
 var toggle_filter = false,
-    pie = null,
+    pie = null, toggle_chart = true,
     curTimestamp, prevTime, setting = 0;
 var analData = {},
     emote_map = {},
     qd_emotes = {};
+
+
 //listener to the popup menu. We listen to it's instructions.
 chrome.runtime.onMessage.addListener(function(response) {
     if (response == "tf")
         toggleFilter();
+    else if(response == "ss")
+        showChart();
 });
 
 var port = chrome.runtime.connect({
@@ -27,7 +31,6 @@ port.onMessage.addListener(function(message) {
         if (data[4] == "1" || user == current_user) {
             target_msg.setAttribute("style", "display:block;visibility:visible;");
         } else {
-            target_msg.setAttribute("style", "display:none;visibility:hidden;");
             target_msg.remove();
         }
     } catch (err) {}
@@ -156,32 +159,60 @@ function storeAnalyticsData(data) {
         dta.push(curData[record].value);
     }
     pie.data.labels = lbls;
-    pie.data.datasets[0].data = dta;
+    pie.data.datasets[0].data = dta;    
+    // handleLegend(pie);
     pie.update();
+    // document.getElementById("0-legend").innerHTML = pie.generateLegend();    
+}
+
+var handleLegend = function(chart) {
+    chart.options.legendCallback = function(chart){
+        var text = [];
+        text.push('<ul class="legend">');
+        for (var i=0; i<chart.data.datasets[0].data.length; i++) {
+            text.push('<li>');
+            text.push('<span style="background-color:' + chart.data.datasets[0].backgroundColor[i] + '">' + chart.data.datasets[0].data[i] + '</span>');
+            if (chart.data.labels[i]) {
+                text.push('<img src="https://static-cdn.jtvnw.net/emoticons/v1/2/1.0">');
+                // +chart.data.labels[i]
+            }
+            text.push('</li>');
+        }
+        text.push('</ul>');
+        return text.join("");
+    };
 }
 
 var handleTwitchMsg = function(msg) {
-    var timestamp = msg.querySelector("span.timestamp").textContent
-    var user = msg.querySelector("span.from").textContent
-    var message = msg.querySelector("span.message")
-    parseEmotes(message, timestamp);
-    if (message.hasAttribute("data-raw") == true) { //better twitch tv
-        try {
-            var raw_msg = decodeURIComponent(message.getAttribute("data-raw"));
-            message = raw_msg.trim();
-        } catch (err) {
+    var go_on = false;
+    try {
+        var timestamp = msg.querySelector("span.timestamp").textContent
+        var user = msg.querySelector("span.from").textContent
+        var message = msg.querySelector("span.message")
+        parseEmotes(message, timestamp);
+        go_on = true;
+    } catch(err) {
+        go_on = false;
+    }
+    if(go_on == true) {
+        if (message.hasAttribute("data-raw") == true) { //better twitch tv
+            try {
+                var raw_msg = decodeURIComponent(message.getAttribute("data-raw"));
+                message = raw_msg.trim();
+            } catch (err) {
+                message = message.textContent.trim();
+            }
+        } else {
             message = message.textContent.trim();
         }
-    } else {
-        message = message.textContent.trim();
+        port.postMessage({
+            id: msg.id,
+            time: timestamp,
+            usr: user,
+            curusr: current_user,
+            data: message
+        });
     }
-    port.postMessage({
-        id: msg.id,
-        time: timestamp,
-        usr: user,
-        curusr: current_user,
-        data: message
-    });
 }
 
 var getChatBoxElement = function(main) {
@@ -254,6 +285,16 @@ function toggleFilter() {
                 handleTwitchMsg(document.getElementById(need.shift()));
             } catch (err) {}
         }
+    }
+}
+
+function showChart() {
+    toggle_chart = toggle_chart == false? true: false;
+    var frame = document.getElementById("dataviz");    
+    if(toggle_chart == true){
+        frame.style.visibility = "hidden";
+    } else {
+        frame.style.visibility = "visible";
     }
 }
 
