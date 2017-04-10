@@ -28,11 +28,10 @@ port.onMessage.addListener(function(message) {
         user = data[2].toLowerCase();
     } catch (err) {}
     try {
-        if (data[4] == "1" || user == current_user) {
-            target_msg.setAttribute("style", "display:block;visibility:visible;");
-        } else {
-            target_msg.remove();
-        }
+    	if(data[4] == "1" || user == current_user)
+			target_msg.setAttribute("style", "display:block;visibility:visible;");
+		else
+			target_msg.remove();
     } catch (err) {}
     storeAnalyticsData(data);
 });
@@ -42,12 +41,10 @@ function enqueueEmote(label, time) {
         if (!(time in qd_emotes) == true) {
             qd_emotes[time] = [];
             qd_emotes[time].push("." + label);
-        } else {
-            qd_emotes[time].push("." + label);
-        }
-    } else {
-        analData[time].storeRecord("." + label);
-    }
+        } else
+			qd_emotes[time].push("." + label);
+    } else 
+		analData[time].storeRecord("." + label);
 }
 
 function parseEmotes(message, time) {
@@ -81,23 +78,20 @@ function StreamData() {
             type == "e" ? "." : "";
         var output = [];
         for (var key in this.freq) {
-            if (parameter == key[0]) {
-                output.push(key);
-            } else if (this.isSentType(key, parameter) == true) {
-                output.push(key);
-            }
+			if (parameter == key[0])
+				output.push(key);
+			else if (this.isSentType(key, parameter) == true)
+				output.push(key);
         }
         return output;
     }
 
     this.getTypeTotal = function(type_keys) {
         var total = 1;
-        for (var key in type_keys) {
-            if (this.freq.hasOwnProperty(key)) {
-                total += this.freq[key];
-            }
-        }
-        return total;
+		for (var key in type_keys)
+			if (this.freq.hasOwnProperty(key)) 
+				total += this.freq[key];
+		return total;
     }
 
     this.updateDataFreq = function(type) {
@@ -148,9 +142,8 @@ function storeAnalyticsData(data) {
         analData[cur_time].storeRecord(record);
         analData[cur_time].updateDataFreq("cmd");
     }
-    if (curTimestamp != cur_time) {
-        curTimestamp = cur_time;
-    }
+    if (curTimestamp != cur_time)
+		curTimestamp = cur_time;
     var lbls = [], dta = [];
     var curData = (setting == 0? analData[curTimestamp].sent: setting == 1? analData[curTimestamp].cmd:
         analData[curTimestamp].emote);
