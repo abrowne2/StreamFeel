@@ -4,10 +4,7 @@
 var toggle_filter = false,
     pie = null, toggle_chart = true,
     curTimestamp, prevTime, setting = 0;
-var analData = {},
-    emote_map = {},
-    qd_emotes = {};
-
+var analData = {}, emote_map = {}, qd_emotes = {};
 
 //listener to the popup menu. We listen to it's instructions.
 chrome.runtime.onMessage.addListener(function(response) {

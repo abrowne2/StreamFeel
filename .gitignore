@@ -5,4 +5,5 @@ _locales/
 src/page_action
 src/inject/common.js
 src/inject/chart.min.js
+src/inject/dataviz.js
 pnacl/Release/background.html
