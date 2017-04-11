@@ -12,7 +12,7 @@ StreamFeel will be a chrome browser extension intended to solve twitch chat's in
 the native client module to use for classification
 * **inject.js** 
 : Code injected into stream's page to manipulate twitch chat
-(Other): default & sentiment.js are trained categorizer models used to load StreamFeel.
+* (Other): default & sentiment.js are trained categorizer models used to load StreamFeel.
 
 ### Technical Challenges Addressed
 * More than I can count with fingers and toes
