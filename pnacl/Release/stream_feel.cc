@@ -41,7 +41,7 @@ struct serializedData {
 
 	serializedData() {
 		int accum = 0;
-		while(accum != 16){
+		while(accum != 12){
 			blocks.push_back(Block());
 			++accum;
 		}
@@ -112,7 +112,7 @@ struct dataClassifier {
 	 * vectorstream and decode the stream into the categorizer. */
 	void buildCategorizer(pp::VarArray& data){
 		int offset = data.Get(0).AsInt();
-		if(offset >= 0 && offset <= 15){
+		if(offset >= 0 && offset <= 11){
 			bool cont = rel_raw.populateBlock(data, offset);
 			if(cont == true){
 				rel_raw.fuseBuffer();
@@ -120,7 +120,7 @@ struct dataClassifier {
 				rel_raw.trained = true;
 			}
 		} else {
-			offset -= 16;
+			offset -= 12;
 			bool cont = sent_raw.populateBlock(data, offset);
 			if(cont == true){
 				sent_raw.fuseBuffer();

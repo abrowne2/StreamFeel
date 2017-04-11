@@ -130,9 +130,9 @@ void displayMenu() {
 /* SegmenData breaks up the entire serialized buffer into eight different chunks
  * They're subsequently interpreted by the native client module. */
 void segmentData(std::vector<char>& buffer, std::string& updated_data, char choice){
-	int index = 0, origBound = buffer.size() / 16, curBound;
+	int index = 0, origBound = buffer.size() / 12, curBound = 0;
 	curBound = origBound;
-	int curOffset = choice == 'r'? 0: 16; 
+	int curOffset = choice == 'r'? 0: 12; 
 	std::string type = choice == 'r'? "relevance_data": "sentiment";
 	while(index != buffer.size()){
 		std::string offset = to_string(curOffset++);

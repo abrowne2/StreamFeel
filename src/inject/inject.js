@@ -14,24 +14,32 @@ chrome.runtime.onMessage.addListener(function(response) {
         showChart();
 });
 
-var port = chrome.runtime.connect({
-    name: "handler"
-});
+var port = chrome.runtime.connect({name: "handler"});
+
 port.onMessage.addListener(function(message) {
-    var data = message.split("|"),
-        user;
+	MessageHandler(message);
+});
+
+function MessageHandler(message){
+    var data = message.split("|"), user;
     var target_msg = document.getElementById(data[0]);
     try {
         user = data[2].toLowerCase();
     } catch (err) {}
-    try {
-    	if(data[4] == "1" || user == current_user)
-			target_msg.setAttribute("style", "display:block;visibility:visible;");
-		else
-			target_msg.remove();
-    } catch (err) {}
-    storeAnalyticsData(data);
-});
+    if(toggle_filter == false) {
+	    try {
+	    	if(data[4] == "1" || user == current_user)
+				target_msg.setAttribute("style", "display:block;visibility:visible;");
+			else
+				target_msg.remove();
+	    } catch (err) {}
+    	storeAnalyticsData(data);		    
+	} else {
+		storeAnalyticsData(data);
+		data[5] = "";
+		need.push(data.join(''));
+	}
+}
 
 function enqueueEmote(label, time) {
     if (!(time in analData == true)) {
@@ -136,17 +144,19 @@ function storeAnalyticsData(data) {
         analData[cur_time].updateDataFreq(" ");
     } else { //command analytics
         record = data[6];
-        analData[cur_time].storeRecord(record);
-        analData[cur_time].updateDataFreq("cmd");
+		if(record[0] == "!"){
+	        analData[cur_time].storeRecord(record);
+	        analData[cur_time].updateDataFreq("cmd");
+	    }
     }
     if (curTimestamp != cur_time)
 		curTimestamp = cur_time;
     var lbls = [], dta = [];
     var curData = (setting == 0? analData[curTimestamp].sent: setting == 1? analData[curTimestamp].cmd:
         analData[curTimestamp].emote);
-    for(var record in curData){
-        lbls.push(curData[record].label);
-        dta.push(curData[record].value);
+    for(var index in curData){
+        lbls.push(curData[index].label);
+        dta.push(curData[index].value);
     }
     pie.data.labels = lbls;
     pie.data.datasets[0].data = dta;    
@@ -254,7 +264,7 @@ var setupMessageListener = function(chat_box) {
                         curMsg.setAttribute("style", "display:block;visibility:visible;");
                         if (curMsg.id == "" || curMsg.id == "undefined")
                             curMsg.setAttribute("id", curMsg.getAttribute("data-id"));
-                        need.push(curMsg.id);
+                        handleTwitchMsg(curMsg);
                     } catch (err) {}
                 }
             }
@@ -272,7 +282,7 @@ function toggleFilter() {
     if (toggle_filter == false) {
         while (need.length > 0) {
             try {
-                handleTwitchMsg(document.getElementById(need.shift()));
+                MessageHandler(need.shift());
             } catch (err) {}
         }
     }
