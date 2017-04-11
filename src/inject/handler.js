@@ -14,6 +14,7 @@ chrome.runtime.onConnect.addListener(function(port) {
 function moduleDidLoad() {
   // Once we load, hide the plugin. In this example, we don't display anything
   // in the plugin, so it is fine to hide it.
+  //we've chunked both datasets into 16 parts to speed up construction
   common.hideModule();
   common.naclModule.postMessage(relevance_data0);
   common.naclModule.postMessage(relevance_data1);
@@ -23,14 +24,33 @@ function moduleDidLoad() {
   common.naclModule.postMessage(relevance_data5);
   common.naclModule.postMessage(relevance_data6);
   common.naclModule.postMessage(relevance_data7);
-  common.naclModule.postMessage(sentiment8);
-  common.naclModule.postMessage(sentiment9);
-  common.naclModule.postMessage(sentiment10);
-  common.naclModule.postMessage(sentiment11);
-  common.naclModule.postMessage(sentiment12);
-  common.naclModule.postMessage(sentiment13);
-  common.naclModule.postMessage(sentiment14);
-  common.naclModule.postMessage(sentiment15);
+  common.naclModule.postMessage(relevance_data8);
+  common.naclModule.postMessage(relevance_data9);
+  common.naclModule.postMessage(relevance_data10);
+  common.naclModule.postMessage(relevance_data11);
+  common.naclModule.postMessage(relevance_data12);
+  common.naclModule.postMessage(relevance_data13);
+  common.naclModule.postMessage(relevance_data14);
+  common.naclModule.postMessage(relevance_data15);
+  //begin sent chunks <><><><><><>
+  common.naclModule.postMessage(sentiment16);
+  common.naclModule.postMessage(sentiment17);
+  common.naclModule.postMessage(sentiment18);
+  common.naclModule.postMessage(sentiment19);
+  common.naclModule.postMessage(sentiment20);
+  common.naclModule.postMessage(sentiment21);
+  common.naclModule.postMessage(sentiment22);
+  common.naclModule.postMessage(sentiment23);
+  common.naclModule.postMessage(sentiment24);
+  common.naclModule.postMessage(sentiment25);
+  common.naclModule.postMessage(sentiment26);
+  common.naclModule.postMessage(sentiment27);
+  common.naclModule.postMessage(sentiment28);
+  common.naclModule.postMessage(sentiment29);
+  common.naclModule.postMessage(sentiment30);
+  common.naclModule.postMessage(sentiment31);
+  common.naclModule.postMessage(sentiment32);
+
 }
 
 
