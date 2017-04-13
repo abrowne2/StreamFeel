@@ -74,15 +74,17 @@ std::vector<std::string> dataset(DataInst& inst){
 }
 
 
-void buildTrainer(text_categorizer_trainer& fit, std::vector<std::string> const& data) {
+text_categorizer BuildCategorizer(std::vector<std::string> const& data) {
+    text_categorizer_trainer fit;    
     int i = 0, invariant = data.size() - 1;
     while(i < invariant){
-        std::string label = data[i+1];
-        std::string msg = data[i];
+        std::string msg = data[i], label = data[i+1];
         std::vector<std::string> token = tokenize_msg(msg,' ');
         fit.add(token,label);
         i += 2;
     }
+    fit.set_num_threads(4);
+    return fit.train();
 }
 
 /* Serialize works by pulling the existing dataset, subsequently training it,
@@ -90,10 +92,7 @@ void buildTrainer(text_categorizer_trainer& fit, std::vector<std::string> const&
 std::vector<char> serialize(DataInst& inst) {
     text_categorizer executor;
     std::vector<std::string> data = dataset(inst);
-    text_categorizer_trainer fit;
-    buildTrainer(fit,data);
-    fit.set_num_threads(4);
-    executor = fit.train();
+    executor = BuildCategorizer(data);
     std::vector<char> buf;
     dlib::vectorstream strm(buf);
     executor.encode(executor,strm);
