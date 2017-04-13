@@ -35,9 +35,10 @@ function MessageHandler(message){
 	    } catch (err) {}
     	storeAnalyticsData(data);		    
 	} else {
-		storeAnalyticsData(data);
+        target_msg.setAttribute("style", "display:block;visibility:visible;");		
+        storeAnalyticsData(data);
 		data[5] = "";
-		need.push(data.join(''));
+        need.push(data.join('|'));
 	}
 }
 
@@ -239,33 +240,22 @@ var setupMessageListener = function(chat_box) {
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             for (var i = 0; i < mutation.addedNodes.length; ++i) {
-                if (toggle_filter == false) {
-                    var newTwitchMsg = mutation.addedNodes[i],
-                        identifier;
-                    var isValid = true;
-                    if (newTwitchMsg.id != "undefined" && newTwitchMsg.id != "") { //native twitch
-                        identifier = newTwitchMsg.id;
-                    } else {
-                        identifier = newTwitchMsg.getAttribute("data-id"); //better twitch tv
-                        if (identifier == "undefined") { //an admin message.
-                            newTwitchMsg.setAttribute("style", "display:block;visibility:visible;");
-                        }
-                        isValid = false;
-                    }
-                    if (handled.includes(identifier) == false) {
-                        handled.push(identifier);
-                        if (isValid == false) //better twitch tv compatibility
-                            newTwitchMsg.setAttribute("id", identifier);
-                        handleTwitchMsg(newTwitchMsg);
-                    }
+                var newTwitchMsg = mutation.addedNodes[i], identifier;
+                var isValid = true;
+                if (newTwitchMsg.id != "undefined" && newTwitchMsg.id != "") { //native twitch
+                    identifier = newTwitchMsg.id;
                 } else {
-                    try {
-                        var curMsg = mutation.addedNodes[i];
-                        curMsg.setAttribute("style", "display:block;visibility:visible;");
-                        if (curMsg.id == "" || curMsg.id == "undefined")
-                            curMsg.setAttribute("id", curMsg.getAttribute("data-id"));
-                        handleTwitchMsg(curMsg);
-                    } catch (err) {}
+                    identifier = newTwitchMsg.getAttribute("data-id"); //better twitch tv
+                    if (identifier == "undefined") { //an admin message.
+                        newTwitchMsg.setAttribute("style", "display:block;visibility:visible;");
+                    }
+                    isValid = false;
+                }
+                if (handled.includes(identifier) == false) {
+                    handled.push(identifier);
+                    if (isValid == false) //better twitch tv compatibility
+                        newTwitchMsg.setAttribute("id", identifier);
+                    handleTwitchMsg(newTwitchMsg);
                 }
             }
         })
