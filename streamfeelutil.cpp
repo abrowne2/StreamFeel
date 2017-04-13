@@ -109,24 +109,28 @@ bool notValid(const std::string& input, char type) {
 			&& input != "gentlemanly" && input != "astonished" && input != "friendly");
 }
 
+std::string readLabel(char sel) {
+	std::string label;
+	while(notValid(label,sel) == true)
+		std::cin >> label;
+	return label;
+}
+
 void readRecord(std::string& msg, DataInst& inst, std::string& label) {
 	std::cout << "Enter message:\n"; 
 	std::cin.ignore();
 	std::getline(std::cin,msg);
 	std::cout << inst.lbl;
-	do {
-		std::cin >> label;
-	} while(notValid(label,inst.selection) == true);
-	//need the delimeter ',': can't confuse it.
+	label = readLabel(inst.selection);
 	msg.erase(std::remove(msg.begin(), msg.end(), ','), msg.end());
 }
 
+/* We open the dataset for appending so we can add another record.
+ * Input validation is performed to ensure accurate labels. */
 void addRecord(DataInst& inst) {
 	std::string msg, label;
-	//open the dataset for appending because we're adding another record.	
 	std::ofstream fileWriter;
 	fileWriter.open(inst.file, std::ios_base::app);
-	//append the new record to the dataset.
 	readRecord(msg,inst,label);
 	std::string new_msg = "," + msg + "," + label;
 	fileWriter << new_msg;
