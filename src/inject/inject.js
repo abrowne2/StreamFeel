@@ -21,18 +21,18 @@ function MessageHandler(message){
     } catch (err) {}
     if(toggle_filter == false) {
 	    try {
-	    	if(data[4] == "1" || user == current_user)
-				target_msg.setAttribute("style", "display:block;visibility:visible;");
-			else
-				target_msg.remove();
+            if(data[4] == "1" || user == current_user)
+                target_msg.setAttribute("style", "display:block;visibility:visible;");
+            else
+                target_msg.remove();
 	    } catch (err) {}
-    	storeAnalyticsData(data);		    
-	} else {
+        storeAnalyticsData(data);		    
+    } else {
         target_msg.setAttribute("style", "display:block;visibility:visible;");		
         storeAnalyticsData(data);
-		data[5] = "";
+        data[5] = "";
         need.push(data.join('|'));
-	}
+    }
 }
 
 function enqueueEmote(label, time) {
@@ -41,9 +41,9 @@ function enqueueEmote(label, time) {
             qd_emotes[time] = [];
             qd_emotes[time].push("." + label);
         } else
-			qd_emotes[time].push("." + label);
+            qd_emotes[time].push("." + label);
     } else 
-		analData[time].storeRecord("." + label);
+        analData[time].storeRecord("." + label);
 }
 
 function parseEmotes(message, time) {
