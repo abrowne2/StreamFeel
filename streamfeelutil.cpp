@@ -17,12 +17,34 @@
 using namespace mitie;
 using namespace dlib;
 
-//reads the contents of the file as a string.
-std::string readData(std::ifstream& fileReader){
-	std::stringstream buffer;
-	buffer << fileReader.rdbuf();
-	return buffer.str();
-}
+//an abstraction intended to keep the # of checks down (?)
+struct DataInst {
+	std::string file_name, lbl, type, file;
+	char selection;
+	int curOffset;
+	std::string dir = "/Users/adambrowne/Desktop/Personal/StreamFeel/src/inject/";
+
+	DataInst(char choice){
+		selection = choice;
+		if(selection == 'r'){
+			curOffset = 0;
+			lbl = "Relevant (y/n):\n", file = "relevance.txt";
+			type = "relevance_data", file_name = dir + "default.js";			
+		} else {
+			curOffset = 16;
+			lbl = "Sentiment:\n", file = "sentiment.txt";
+			type = "sentiment", file_name = dir + "sentiment.js";
+		}
+	}
+	//reads the contents of the file as a string.
+	std::string readData() {
+		std::ifstream fileReader(file);		
+		std::stringstream buffer;
+		buffer << fileReader.rdbuf();
+		return buffer.str();
+	}
+
+};
 
 /* In order to categorize a msg, we must first tokenize it.
 * this helper function does that by parsing spaces. */
@@ -46,20 +68,13 @@ std::vector<std::string> split(std::string& raw){
 }
 
 /* Load an existing dataset from a file. */
-std::vector<std::string> dataset(char c){
-	std::string raw;	
-	std::ifstream fReader(c == 'r'? "relevance.txt": "sentiment.txt");
-	raw = readData(fReader);
+std::vector<std::string> dataset(DataInst& inst){
+	std::string raw = inst.readData();
 	return split(raw);
 }
 
 
-/* Serialize works by pulling the existing dataset, subsequently training it,
- * then serializing (encodes) the data to the vector stream and returning its' buffer */
-std::vector<char> serialize(char choice) {
-    text_categorizer executor;
-    std::vector<std::string> data = dataset(choice);
-    text_categorizer_trainer fit;
+void buildTrainer(text_categorizer_trainer& fit, std::vector<std::string> const& data) {
     int i = 0, invariant = data.size() - 1;
     while(i < invariant){
         std::string label = data[i+1];
@@ -68,6 +83,15 @@ std::vector<char> serialize(char choice) {
         fit.add(token,label);
         i += 2;
     }
+}
+
+/* Serialize works by pulling the existing dataset, subsequently training it,
+ * then serializing (encodes) the data to the vector stream and returning its' buffer */
+std::vector<char> serialize(DataInst& inst) {
+    text_categorizer executor;
+    std::vector<std::string> data = dataset(inst);
+    text_categorizer_trainer fit;
+    buildTrainer(fit,data);
     fit.set_num_threads(4);
     executor = fit.train();
     std::vector<char> buf;
@@ -86,32 +110,25 @@ bool notValid(const std::string& input, char type) {
 			&& input != "gentlemanly" && input != "astonished" && input != "friendly");
 }
 
-void readRecord(std::string& msg, std::string& label, const std::string& lbl, char choice) {
+void readRecord(std::string& msg, DataInst& inst, std::string& label) {
 	std::cout << "Enter message:\n"; 
 	std::cin.ignore();
 	std::getline(std::cin,msg);
-	std::cout << lbl;
+	std::cout << inst.lbl;
 	do {
 		std::cin >> label;
-	} while(notValid(label,choice) == true);
+	} while(notValid(label,inst.selection) == true);
 	//need the delimeter ',': can't confuse it.
 	msg.erase(std::remove(msg.begin(), msg.end(), ','), msg.end());
 }
 
-void addRecord(char choice) {
-	std::string file, lbl, msg, label;
-	if(choice == 'r'){
-		lbl = "Relevant (y/n):\n";
-		file = "relevance.txt";
-	} else {
-		lbl = "Sentiment:\n";
-		file = "sentiment.txt";
-	}
+void addRecord(DataInst& inst) {
+	std::string msg, label;
 	//open the dataset for appending because we're adding another record.	
 	std::ofstream fileWriter;
-	fileWriter.open(file, std::ios_base::app);
+	fileWriter.open(inst.file, std::ios_base::app);
 	//append the new record to the dataset.
-	readRecord(msg,label,lbl,choice);
+	readRecord(msg,inst,label);
 	std::string new_msg = "," + msg + "," + label;
 	fileWriter << new_msg;
 	std::cout << "Added " << msg << "," << label << std::endl;
@@ -129,11 +146,11 @@ void displayMenu() {
 
 /* SegmenData breaks up the entire serialized buffer into eight different chunks
  * They're subsequently interpreted by the native client module. */
-void segmentData(std::vector<char>& buffer, std::string& updated_data, char choice){
+void segmentData(std::vector<char>& buffer, std::string& updated_data, DataInst& inst){
 	int index = 0, origBound = buffer.size() / 16, curBound;
 	curBound = origBound;
-	int curOffset = choice == 'r'? 0: 16; 
-	std::string type = choice == 'r'? "relevance_data": "sentiment";
+	int curOffset = inst.curOffset;
+	std::string type = inst.type;
 	while(index != buffer.size()){
 		std::string offset = to_string(curOffset++);
 		updated_data += ("\nvar " + type + offset + " = [\n" + offset + ",");
@@ -152,18 +169,12 @@ void segmentData(std::vector<char>& buffer, std::string& updated_data, char choi
 /* Serializes a trained categorizer model and writes its
  * raw representation to the javascript file containing it,
  * this will be deserialized by the native client module. */
-void updateDataset(char choice){
+void updateDataset(DataInst& inst){
 	//get the trained buffer (raw representation of the model)
-	std::vector<char> buffer = serialize(choice);
-	std::string file_name;
-	if(choice == 'r'){
-		file_name = "/Users/adambrowne/Desktop/Personal/StreamFeel/src/inject/default.js";
-	} else {
-		file_name = "/Users/adambrowne/Desktop/Personal/StreamFeel/src/inject/sentiment.js";
-	}
+	std::vector<char> buffer = serialize(inst);
 	std::string updated_data;
-	segmentData(buffer,updated_data,choice);
-	std::ofstream dataWriter(file_name);
+	segmentData(buffer,updated_data,inst);
+	std::ofstream dataWriter(inst.file_name);
 	dataWriter << updated_data;
 }
 
@@ -174,18 +185,19 @@ int main() {
 	displayMenu();
 	do {
 		std::cin >> choice;
+		auto rel = DataInst('r'), sen = DataInst('s');
 		switch(choice){
 			case 1:
-				addRecord('r');
+				addRecord(rel);
 				break;
 			case 2:
-				addRecord('s');
+				addRecord(sen);
 				break;
 			case 3:
-				updateDataset('r');
+				updateDataset(rel);
 				break;
 			case 4:
-				updateDataset('s');
+				updateDataset(sen);
 				break;
 			case 5:
 				displayMenu();
