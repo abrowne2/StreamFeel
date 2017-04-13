@@ -1,5 +1,7 @@
 /* Copyright (c) 2017 Adam Browne
  * Inject.js is the content script which analyzes twitch. */
+//Chart visualization code is in another file due to it's "spammy" nature w/ dynamically created HTML elements and styles.
+
  chrome.runtime.onMessage.addListener(function(response) {
     if (response == "tf")
         toggleFilter();
