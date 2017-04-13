@@ -1,13 +1,6 @@
 /* Copyright (c) 2017 Adam Browne
  * Inject.js is the content script which analyzes twitch. */
-//NOTES to self: If no data for timestamp, don't render it.
-var toggle_filter = false,
-    pie = null, toggle_chart = true,
-    curTimestamp, prevTime, setting = 0;
-var analData = {}, emote_map = {}, qd_emotes = {};
-
-//listener to the popup menu. We listen to it's instructions.
-chrome.runtime.onMessage.addListener(function(response) {
+ chrome.runtime.onMessage.addListener(function(response) {
     if (response == "tf")
         toggleFilter();
     else if(response == "ss")
@@ -127,8 +120,7 @@ function StreamData() {
 }
 
 function storeAnalyticsData(data) {
-    var cur_time = data[1],
-        record;
+    var cur_time = data[1], record;
     if (!(cur_time in analData) == true) {
         analData[cur_time] = new StreamData();
         if (!(cur_time in qd_emotes) == false && qd_emotes[cur_time].length > 0) {
@@ -231,11 +223,6 @@ var getChatBoxElement = function(main) {
     }
 }
 
-var need = [],
-    handled = [];
-/* To observe the new messages, we need to use a MutationObserver
-* and then apply a queryselector to get the new message added:
-we're looking for: <li class="message-line chat-line ember-view"> */
 var setupMessageListener = function(chat_box) {
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
@@ -292,9 +279,6 @@ function setupChart(construct) {
     pie = new Chart(construct, chartSettings());
 }
 
-var oldStream = "";
-var curStream = window.location.href;
-
 function checkChangedStream(curStream) {
     if (curStream != oldStream) {
         oldStream = curStream;
@@ -305,5 +289,4 @@ function checkChangedStream(curStream) {
         checkChangedStream(window.location.href);
     }, 2000);
 }
-
 checkChangedStream();

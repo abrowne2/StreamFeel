@@ -1,0 +1,11 @@
+var toggle_filter = false;
+var pie = null;
+var toggle_chart = true;
+var curTimestamp, prevTime;
+var setting = 0;
+var analData = {};
+var emote_map = {};
+var qd_emotes = {};
+var oldStream = "";
+var curStream = window.location.href;
+var need = [], handled = [];
