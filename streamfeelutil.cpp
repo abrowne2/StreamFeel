@@ -105,8 +105,7 @@ bool notValid(const std::string& input, char type) {
 		return input != "y" && input != "n";
 	else
 		return (input != "funny" && input != "sad" && input != "happy" 
-			&& input != "angry" && input != "confused" && input != "curious" 
-			&& input != "gentlemanly" && input != "astonished" && input != "friendly");
+			&& input != "angry" && input != "confused" && input != "curious" && input != "shocked");
 }
 
 std::string readLabel(char sel) {
