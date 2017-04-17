@@ -127,7 +127,7 @@ function StreamData() {
     }
 }
 
-function storeAnalyticsData(data) {
+function handleRecord(data) {
     var cur_time = data[1], record;
     if (!(cur_time in analData) == true) {
         analData[cur_time] = new StreamData();
@@ -145,13 +145,18 @@ function storeAnalyticsData(data) {
         analData[cur_time].updateDataFreq(" ");
     } else { //command analytics
         record = data[6];
-		if(record[0] == "!"){
-	        analData[cur_time].storeRecord(record);
-	        analData[cur_time].updateDataFreq("cmd");
-	    }
+        if(record[0] == "!"){
+            analData[cur_time].storeRecord(record);
+            analData[cur_time].updateDataFreq("cmd");
+        }
     }
     if (curTimestamp != cur_time)
-		curTimestamp = cur_time;
+        curTimestamp = cur_time;    
+}
+
+
+function storeAnalyticsData(data) {
+    handleRecord(data);
     checkDarkMode();
     var lbls = [], dta = [], curData;
     curData = analData[curTimestamp].sent;
