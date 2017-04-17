@@ -37,6 +37,11 @@ function MessageHandler(message){
     }
 }
 
+//complete this at a later date.
+// function handleMentions(curTimestamp) {
+
+// }
+
 function enqueueEmote(label, time) {
     if (!(time in analData == true)) {
         if (!(time in qd_emotes) == true) {
@@ -62,12 +67,13 @@ function parseEmotes(message, time) {
 function StreamData() {
     this.freq = {}, this.sent = [];
     this.cmd = [], this.emote = [];
-
+    this.msgs = 0;
     this.storeRecord = function(label) {
         if (!(label in this.freq) == true)
             this.freq[label] = 1;
         else
             ++this.freq[label];
+        ++this.msgs;
     }
 
     this.isSentType = function(key, parameter) {
@@ -146,37 +152,26 @@ function storeAnalyticsData(data) {
     }
     if (curTimestamp != cur_time)
 		curTimestamp = cur_time;
-    var lbls = [], dta = [];
-    var curData = (setting == 0? analData[curTimestamp].sent: setting == 1? analData[curTimestamp].cmd:
-        analData[curTimestamp].emote);
+    checkDarkMode();
+    if(darkmode == true) {
+        Chart.defaults.global.defaultFontColor = "#ffffff";
+        document.getElementById("dataviz").style.backgroundColor = "#433f4a";
+    } else {
+        Chart.defaults.global.defaultFontColor = "#808080";
+        document.getElementById("dataviz").style.backgroundColor = "mintcream";        
+    }
+    var lbls = [], dta = [], curData;
+    curData = analData[curTimestamp].sent;
+    pie.options.title.text = "What are people feeling? (" + analData[curTimestamp].msgs.toString() + ")";
     for(var index in curData){
         lbls.push(curData[index].label);
         dta.push(curData[index].value);
     }
     pie.data.labels = lbls;
     pie.data.datasets[0].data = dta;    
-    // handleLegend(pie);
     pie.update();
-    // document.getElementById("0-legend").innerHTML = pie.generateLegend();    
 }
 
-var handleLegend = function(chart) {
-    chart.options.legendCallback = function(chart){
-        var text = [];
-        text.push('<ul class="legend">');
-        for (var i=0; i<chart.data.datasets[0].data.length; i++) {
-            text.push('<li>');
-            text.push('<span style="background-color:' + chart.data.datasets[0].backgroundColor[i] + '">' + chart.data.datasets[0].data[i] + '</span>');
-            if (chart.data.labels[i]) {
-                text.push('<img src="https://static-cdn.jtvnw.net/emoticons/v1/2/1.0">');
-                // +chart.data.labels[i]
-            }
-            text.push('</li>');
-        }
-        text.push('</ul>');
-        return text.join("");
-    };
-}
 
 var handleTwitchMsg = function(msg) {
     var go_on = false;
