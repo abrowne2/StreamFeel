@@ -153,13 +153,6 @@ function storeAnalyticsData(data) {
     if (curTimestamp != cur_time)
 		curTimestamp = cur_time;
     checkDarkMode();
-    if(darkmode == true) {
-        Chart.defaults.global.defaultFontColor = "#ffffff";
-        document.getElementById("dataviz").style.backgroundColor = "#433f4a";
-    } else {
-        Chart.defaults.global.defaultFontColor = "#808080";
-        document.getElementById("dataviz").style.backgroundColor = "mintcream";        
-    }
     var lbls = [], dta = [], curData;
     curData = analData[curTimestamp].sent;
     pie.options.title.text = "What are people feeling? (" + analData[curTimestamp].msgs.toString() + ")";
