@@ -1,7 +1,7 @@
 var toggle_filter = false;
 var pie = null;
 var toggle_chart = true;
-var curTimestamp, prevTime;
+var selTime;
 var darkmode = false;
 var analData = {};
 var emote_map = {};

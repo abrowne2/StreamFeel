@@ -38,7 +38,7 @@ function MessageHandler(message){
 }
 
 //complete this at a later date.
-// function handleMentions(curTimestamp) {
+// function handleMentions(selTime) {
 
 // }
 
@@ -115,7 +115,10 @@ function StreamData() {
                         value: (val / totalFreq)
                     });
                 else if (type == "e") {
-                    //complete emoji image labels
+                    this.emote.push({
+                    	label: actual.substr(1),
+                    	value: (val / totalFreq)
+                    });
                 } else {
                     this.sent.push({
                         label: actual,
@@ -150,24 +153,39 @@ function handleRecord(data) {
             analData[cur_time].updateDataFreq("cmd");
         }
     }
-    if (curTimestamp != cur_time)
-        curTimestamp = cur_time;    
+    if(selTime == ""){
+    	selTime = cur_time;
+	    let numCurMsg = analData[selTime].msgs.toString();	
+		document.getElementById("selected").innerHTML = selTime + " using " + numCurMsg + " messages";    	
+    }
 }
 
 
-function storeAnalyticsData(data) {
-    handleRecord(data);
-    checkDarkMode();
+function handleSlider() {
+	var slider = document.getElementById("seltime");
+	let times = Object.keys(analData);
+	slider.max = times.length - 1;
+	selTime = times[slider.value];	
+    let numCurMsg = analData[selTime].msgs.toString();	
+	let slider_label = '<img src ="' + timeimg + '"> ' + selTime + ' <img src="' + msgimg + '"> ' + numCurMsg;
+	document.getElementById("selected").innerHTML = slider_label; 
     var lbls = [], dta = [], curData;
-    curData = analData[curTimestamp].sent;
-    pie.options.title.text = "What are people feeling? (" + analData[curTimestamp].msgs.toString() + ")";
+    curData = analData[selTime].sent;
     for(var index in curData){
         lbls.push(curData[index].label);
         dta.push(curData[index].value);
     }
     pie.data.labels = lbls;
     pie.data.datasets[0].data = dta;    
-    pie.update();
+    pie.update();	
+}
+
+function storeAnalyticsData(data) {
+    // console.log(Object.keys(analData));
+    //slider label: .innerHTML (use value to index into OBject.Keys)
+    handleRecord(data);
+    checkDarkMode();
+	handleSlider();    
 }
 
 
