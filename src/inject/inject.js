@@ -15,6 +15,15 @@ port.onMessage.addListener(function(message) {
 	MessageHandler(message);
 });
 
+function isRealtime() {
+	try {
+		var current = document.getElementById("rltime").checked;
+		real_time = (current == true? true: false);
+	} catch(e) {
+		real_time = true;
+	}
+}
+
 function MessageHandler(message){
     var data = message.split("|"), user;
     var target_msg = document.getElementById(data[0]);
@@ -153,10 +162,14 @@ function handleRecord(data) {
             analData[cur_time].updateDataFreq("cmd");
         }
     }
-    if(selTime == ""){
-    	selTime = cur_time;
-	    let numCurMsg = analData[selTime].msgs.toString();	
-		document.getElementById("selected").innerHTML = selTime + " using " + numCurMsg + " messages";    	
+    if(real_time == true){
+		var slider = document.getElementById("seltime");    	
+    	slider.value = slider.max;
+    	try {
+    		document.getElementById("rltime").checked = true;
+    	} catch(e) {
+    		console.log("some rendering error(?)");
+    	}
     }
 }
 
@@ -166,9 +179,7 @@ function handleSlider() {
 	let times = Object.keys(analData);
 	slider.max = times.length - 1;
 	selTime = times[slider.value];	
-    let numCurMsg = analData[selTime].msgs.toString();	
-	let slider_label = '<img src ="' + timeimg + '"> ' + selTime + ' <img src="' + msgimg + '"> ' + numCurMsg;
-	document.getElementById("selected").innerHTML = slider_label; 
+    modifyTags();
     var lbls = [], dta = [], curData;
     curData = analData[selTime].sent;
     for(var index in curData){
@@ -180,9 +191,16 @@ function handleSlider() {
     pie.update();	
 }
 
+function modifyTags() {
+    let numCurMsg = analData[selTime].msgs.toString();	
+	document.getElementById("tim").src = timeimg;
+	document.getElementById("curtim").innerHTML = selTime;
+	document.getElementById("msgs").src = msgimg;
+	document.getElementById("num").innerHTML = numCurMsg;	
+}
+
 function storeAnalyticsData(data) {
-    // console.log(Object.keys(analData));
-    //slider label: .innerHTML (use value to index into OBject.Keys)
+	isRealtime();
     handleRecord(data);
     checkDarkMode();
 	handleSlider();    

@@ -1,6 +1,6 @@
 var toggle_filter = false;
 var pie = null;
-var toggle_chart = true;
+var toggle_chart = true, real_time = true;
 var selTime;
 var darkmode = false;
 var analData = {};
