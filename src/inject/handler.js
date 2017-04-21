@@ -32,6 +32,7 @@ function moduleDidLoad() {
   common.naclModule.postMessage(relevance_data13);
   common.naclModule.postMessage(relevance_data14);
   common.naclModule.postMessage(relevance_data15);
+  //begin the sentiment dataset chunking for this portion of the code 
   common.naclModule.postMessage(sentiment16);
   common.naclModule.postMessage(sentiment17);
   common.naclModule.postMessage(sentiment18);
