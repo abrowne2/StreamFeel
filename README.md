@@ -1,8 +1,14 @@
 # StreamFeel - Twitch chat analytics &amp; more
 
-### General description
+StreamFeel is a Chrome Browser Extension for Twitch (streaming video platform).
+It solves the problem of "Wow! I can't understand what people are saying because none of this makes sense!". Twitch chat is, in many ways, a minefield.
 
-StreamFeel will be a chrome browser extension intended to solve twitch chat's incomprehensible minefield, where it's nearly impossible to hold a conversation or see what people are saying at large volumes. StreamFeel intends to filter out 'garbage' messages and see what people are saying (and what they feel).
+### Primary Features
+Without the use of a predefined set of rules or algorithm and by using thousands of twitch messages, StreamFeel:
+* Filters chat messages intelligently,
+* Computes sentiment (what people are feeling),
+* User Mentions (in-progress),
+* Provides analytics; emote, sentiment, and the ability to view this info by the minute or in realtime.
 
 ### Important files
 * **stream_feel.cc** (pnacl/Release)
