@@ -197,18 +197,6 @@ function handleSlider() {
     pie.data.labels = lbls;
     pie.data.datasets[0].data = dta;    
 	pie.update();	
-	// let link = "https://static-cdn.jtvnw.net/emoticons/v1/33/1.0";
-	// var pat = null;
-	// var test = new Image();
-	// test.src = link;
-	// var c = document.getElementById("sent");
-	// var context = c.getContext('2d');
-	// test.onload = function () {
-	// 	pat = context.createPattern(test, 'repeat');
-		
-	// 	pie.data.datasets[0].backgroundColor =  [pat,"#5DA5DA","#FAA43A","#60BD68","#F17CB0","#B2912F","#B276B2","#DECF3F","#F15854","#2ECCC4"];
- //    	pie.update();			
-	// }    
 }
 
 function modifyTags() {
