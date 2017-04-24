@@ -307,7 +307,7 @@ struct responseFormatter {
 			std::string hrs = "";
 			while(index++ < pos)
 				hrs += time[index];
-			x += (atoi(hrs.c_str()) * 60);
+			x += (atoi(hrs.c_str()) * 3600);
 			return x;
 		} else {
 			x = atoi(time.c_str());
