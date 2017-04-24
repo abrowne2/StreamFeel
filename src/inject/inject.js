@@ -67,8 +67,16 @@ function parseEmotes(message, time) {
     for (var i = 0; i < emotes.length; ++i) {
         var current_emote = emotes[i];
         var textRep = current_emote.getAttribute("alt");
-        if (!(textRep in emote_map) == true)
-            emote_map[textRep] = current_emote.getAttribute("src");
+        if (!(textRep in store_map) == true){
+			let imgSrc = current_emote.getAttribute("src");
+			var impat = new Image(), pat;
+			impat.src = imgSrc;
+			var c = document.getElementById("sent");
+			let context = c.getContext('2d');			
+			impat.onload = function() {
+				store_map[textRep] = context.createPattern(impat,'repeat');
+			}
+        }
         enqueueEmote(textRep, time);
     }
 }
@@ -188,18 +196,19 @@ function handleSlider() {
     }
     pie.data.labels = lbls;
     pie.data.datasets[0].data = dta;    
-	let link = "https://static-cdn.jtvnw.net/emoticons/v1/33/1.0";
-	var pat = null;
-	var test = new Image();
-	test.src = link;
-	var c = document.getElementById("sent");
-	var context = c.getContext('2d');
-	test.onload = function () {
-		pat = context.createPattern(test, 'repeat');
+	pie.update();	
+	// let link = "https://static-cdn.jtvnw.net/emoticons/v1/33/1.0";
+	// var pat = null;
+	// var test = new Image();
+	// test.src = link;
+	// var c = document.getElementById("sent");
+	// var context = c.getContext('2d');
+	// test.onload = function () {
+	// 	pat = context.createPattern(test, 'repeat');
 		
-		pie.data.datasets[0].backgroundColor =  [pat,"#5DA5DA","#FAA43A","#60BD68","#F17CB0","#B2912F","#B276B2","#DECF3F","#F15854","#2ECCC4"];
-    	pie.update();			
-	}    
+	// 	pie.data.datasets[0].backgroundColor =  [pat,"#5DA5DA","#FAA43A","#60BD68","#F17CB0","#B2912F","#B276B2","#DECF3F","#F15854","#2ECCC4"];
+ //    	pie.update();			
+	// }    
 }
 
 function modifyTags() {

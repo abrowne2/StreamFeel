@@ -8,6 +8,7 @@
 #include <cstring>
 #include <queue>
 #include <cctype>
+#include <unordered_map>
 
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/module.h"
@@ -77,8 +78,8 @@ struct serializedData {
 struct dataClassifier {
 	//categorizers for sentiment and relevance.
 	text_categorizer drelevant, sentiment; 
+	serializedData rel_raw, sent_raw;	
 	bool isTrained = false;
-	serializedData rel_raw, sent_raw;
 
 	static bool checkSpaces(char left, char right) 
 		{ return (left == right) && (left == ' '); }
@@ -268,9 +269,50 @@ struct StreamMessage {
 struct responseFormatter {
 	dataClassifier RC;	
 	std::queue<StreamMessage> backlog;
+	std::unordered_map<int, std::unordered_map<std::string, int> > messages;
 
 	bool isReady() const { 
 		return RC.isTrained;
+	}
+
+	/* cleanupHist(), isSpam(), & seconds() are all functions related
+	 * to preventing duplicate messages in chat. Consider implementing the leveshtein distance. */
+
+	//cleans up the message history used for spam scrubbing.
+	void cleanupHist(int sec) {
+		if(messages.find(sec) != messages.end())
+			messages.erase(sec);
+	}
+
+	//modify this so that the times are within 30 sec intervals (use std::chrono)
+	bool isSpam(std::string& time, std::string& msg) {		
+		int sec = seconds(time);
+		cleanupHist(sec - 120);
+		if(messages.find(sec) == messages.end()){
+			std::unordered_map<std::string, int> msg_freq;
+			messages[sec] = msg_freq;
+		}
+		return (messages.find(sec-60) != messages.end()? messages[sec][msg]++ >= 1 || 
+			messages[sec-60][msg] >= 1: messages[sec][msg]++ >= 1);
+	}	
+
+	/* Parses HH:MM into seconds; if there are multiple or no colons, 
+	 * resorts to explicit conversion */
+	int seconds(std::string& time){
+		int x = 0;
+		bool canParse = std::count(time.begin(),time.end(),':') == 1;
+		if(canParse == true) {
+			int pos = time.find(":"), index = 0;
+			x += (atoi(time.substr(pos+1).c_str()));
+			std::string hrs = "";
+			while(index++ < pos)
+				hrs += time[index];
+			x += (atoi(hrs.c_str()) * 60);
+			return x;
+		} else {
+			x = atoi(time.c_str());
+		}
+		return x;
 	}
 
 	void addMessage(StreamMessage& msg){
@@ -295,7 +337,12 @@ struct responseFormatter {
 		if(parsed.cmdMsg == true) {
 			response += ("0||" + parsed.cmd);
 		} else {
-			bool relevant = RC.isRelevant(parsed.msg);
+			bool relevant;
+			if(isSpam(parsed.time, parsed.msg) == false){
+				relevant = RC.isRelevant(parsed.msg);
+			} else {
+				relevant = false;
+			}
 			response += (relevant == true? "1|": "0|");
 			std::string feeling = RC.determineFeel(parsed.msg);
 			response += feeling;
@@ -372,4 +419,4 @@ Module* CreateModule() {
   return new StreamFeelModule();
 }
 
-}  // namespace pp
+}  // namespace pp 

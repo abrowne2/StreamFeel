@@ -1,10 +1,11 @@
 var toggle_filter = false;
 var pie = null;
+var stored_emotes = {};
 var toggle_chart = true, real_time = true;
 var selTime;
 var darkmode = false;
 var analData = {};
-var emote_map = {};
+var store_map = {};
 var qd_emotes = {};
 var oldStream = "";
 var curStream = window.location.href;
