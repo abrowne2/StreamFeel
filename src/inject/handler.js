@@ -16,6 +16,7 @@ function moduleDidLoad() {
   // in the plugin, so it is fine to hide it.
   //we've chunked both datasets into 16 parts to speed up construction
   common.hideModule();
+  //i would use eval for these expressions but b/c of chrome extension
   common.naclModule.postMessage(relevance_data0);
   common.naclModule.postMessage(relevance_data1);
   common.naclModule.postMessage(relevance_data2);

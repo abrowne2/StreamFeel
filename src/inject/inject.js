@@ -71,7 +71,7 @@ function parseEmotes(message, time) {
 			let imgSrc = current_emote.getAttribute("src");
 			var impat = new Image(), pat;
 			impat.src = imgSrc;
-			var c = document.getElementById("sent");
+			var c = document.getElementById("emote");
 			let context = c.getContext('2d');			
 			impat.onload = function() {
 				store_map[textRep] = context.createPattern(impat,'repeat');
@@ -163,12 +163,6 @@ function handleRecord(data) {
         record = data[5];
         analData[cur_time].storeRecord(record);
         analData[cur_time].updateDataFreq(" ");
-    } else { //command analytics
-        record = data[6];
-        if(record[0] == "!"){
-            analData[cur_time].storeRecord(record);
-            analData[cur_time].updateDataFreq("cmd");
-        }
     }
     if(real_time == true){
 		var slider = document.getElementById("seltime");    	
@@ -316,6 +310,8 @@ function showChart() {
 
 function setupChart(construct) {
     pie = new Chart(construct, chartSettings());
+    var frame = document.getElementById("emote");
+    emote = new Chart(frame, emoteSettings());
 }
 
 function checkChangedStream(curStream) {
