@@ -4,7 +4,7 @@ StreamFeel uses thousands of twitch chat messages to power its' filtering and se
 
 ## Submitting new chat messages
 
-[Submit a Chat Message](https://github.com/abrowne2/StreamFeel/issues/new?title=Improving+Chat+Filter&assignee=abrowne2&body=Please+enter+your+message+here+and+its'+relevance.&labels[]=message)
+[Submit a Chat Message](https://github.com/abrowne2/StreamFeel/issues/new?title=Improving+Chat+Filter&assignee=abrowne2&body=Please+enter+your+message(s)+here+and+their+relevance.&labels[]=message)
 
 By submitting new messages, you make it more accurate.
 * Messages can either be "relevant" or "not relevant".
