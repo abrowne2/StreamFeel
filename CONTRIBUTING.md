@@ -1,4 +1,4 @@
-# How can I contribute to StreamFeel?
+# Contributing to StreamFeel
 
 StreamFeel uses thousands of twitch chat messages to power its' filtering and sentiment analysis; 
 Before contributing, please review the info below.
