@@ -170,30 +170,33 @@ function handleSlider() {
 	slider.max = times.length - 1;
 	selTime = times[slider.value];	
     modifyTags();
-    var lbls = [], dta = [], curData;
-    curData = analData[selTime].sent;
+    let bColor = renderData(selTime);
+    if(setting == 1){
+        pie.data.datasets[0].backgroundColor = bColor;
+        pie.options.title.text = "Emote Analytics";
+        pie.options.tooltips.enabled = false;
+        pie.reset();
+    } else {
+        pie.data.datasets[0].backgroundColor = ["#5DA5DA","#FAA43A","#60BD68","#F17CB0","#B2912F",
+                "#B276B2","#DECF3F","#F15854","#2ECCC4"];
+        pie.options.title.text = (setting == 0? "What are people feeling?": "Command Analytics");
+        pie.options.tooltips.enabled = true;
+    }
+	pie.update();
+}
+
+function renderData(time){
+    var lbls = [], dta = [], curData, bColor = [];
+    curData = (setting == 0? analData[time].sent: setting == 1? analData[time].emote: analData[time].cmd);
     for(var index in curData){
         lbls.push(curData[index].label);
         dta.push(curData[index].value);
+        if(setting == 1)
+            bColor.push(store_map[curData[index].label]);
     }
     pie.data.labels = lbls;
     pie.data.datasets[0].data = dta;    
-	pie.update();
-    renderEmote(selTime);
-}
-
-function renderEmote(time){
-    var emt = [], dta2 = [], bColor = [], ema = analData[time].emote;
-    for(var index in ema){
-        emt.push(ema[index].label);
-        dta2.push(ema[index].value);
-        bColor.push(store_map[ema[index].label]);
-    }
-    emote.data.labels = emt;
-    emote.data.datasets[0].data = dta2;
-    emote.data.datasets[0].backgroundColor = bColor;
-    emote.reset();
-    emote.update();     
+    return bColor;
 }
 
 function modifyTags() {
@@ -317,8 +320,6 @@ function showChart() {
 
 function setupChart(construct) {
     pie = new Chart(construct, chartSettings());
-    var frame = document.getElementById("emote");
-    emote = new Chart(frame, emoteSettings());
 }
 
 function checkChangedStream(curStream) {

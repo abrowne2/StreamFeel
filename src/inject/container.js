@@ -1,5 +1,5 @@
 var toggle_filter = false;
-var emote = null;
+var setting = 0;
 var pie = null;
 var stored_emotes = {};
 var toggle_chart = true, real_time = true;
