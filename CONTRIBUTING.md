@@ -3,7 +3,7 @@
 StreamFeel uses thousands of twitch chat messages to power its' filtering and sentiment analysis; 
 
 ## Submitting new chat messages
-[Submit a chat message here](/abrowne2/StreamFeel/issues/new?title=Improving Chat Filter&assignee=abrowne2&body=<Please enter your message here and its' relevance.>&labels[]=message)
+[Submit a chat message here](issues/new?title=Improving Chat Filter&assignee=abrowne2&body=<Please enter your message here and its' relevance.>&labels[]=message)
 
 By submitting new messages, you make it more accurate.
 * Messages can either be "relevant" or "not relevant".
