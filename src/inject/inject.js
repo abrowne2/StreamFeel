@@ -52,14 +52,10 @@ function MessageHandler(message){
 // }
 
 function enqueueEmote(label, time) {
-    if (!(time in analData == true)) {
-        if (!(time in qd_emotes) == true) {
-            qd_emotes[time] = [];
-            qd_emotes[time].push("." + label);
-        } else
-            qd_emotes[time].push("." + label);
-    } else 
-        analData[time].storeRecord("." + label);
+    if (!(time in analData == true)) 
+        analData[time] = new StreamData();
+    analData[time].storeRecord("." + label);
+    analData[time].updateDataFreq("e");                    
 }
 
 function parseEmotes(message, time) {
@@ -68,14 +64,14 @@ function parseEmotes(message, time) {
         var current_emote = emotes[i];
         var textRep = current_emote.getAttribute("alt");
         if (!(textRep in store_map) == true){
-			let imgSrc = current_emote.getAttribute("src");
-			var impat = new Image(), pat;
-			impat.src = imgSrc;
-			var c = document.getElementById("emote");
-			let context = c.getContext('2d');			
-			impat.onload = function() {
-				store_map[textRep] = context.createPattern(impat,'repeat');
-			}
+            let imgSrc = current_emote.getAttribute("src");
+            var impat = new Image(), pat;
+            impat.src = (imgSrc[0] != '/'? imgSrc: "https:" + imgSrc);
+            var c = document.getElementById("painted");
+            let context = c.getContext('2d');			
+            impat.onload = function() {
+            	store_map[textRep] = context.createPattern(impat,'repeat');
+            }
         }
         enqueueEmote(textRep, time);
     }
@@ -149,16 +145,8 @@ function StreamData() {
 
 function handleRecord(data) {
     var cur_time = data[1], record;
-    if (!(cur_time in analData) == true) {
+    if (!(cur_time in analData) == true)
         analData[cur_time] = new StreamData();
-        if (!(cur_time in qd_emotes) == false && qd_emotes[cur_time].length > 0) {
-            while (qd_emotes[cur_time].length > 0) {
-                var emote = qd_emotes[cur_time].shift();
-                analData[cur_time].storeRecord(emote);
-            }
-            analData[cur_time].updateDataFreq("e");
-        }
-    }
     if (data[5] != "") { //sentiment analytics
         record = data[5];
         analData[cur_time].storeRecord(record);
@@ -190,11 +178,30 @@ function handleSlider() {
     }
     pie.data.labels = lbls;
     pie.data.datasets[0].data = dta;    
-	pie.update();	
+	pie.update();
+    renderEmote(selTime);
+}
+
+function renderEmote(time){
+    var emt = [], dta2 = [], bColor = [], ema = analData[time].emote;
+    for(var index in ema){
+        emt.push(ema[index].label);
+        dta2.push(ema[index].value);
+        bColor.push(store_map[ema[index].label]);
+    }
+    emote.data.labels = emt;
+    emote.data.datasets[0].data = dta2;
+    emote.data.datasets[0].backgroundColor = bColor;
+    emote.reset();
+    emote.update();     
 }
 
 function modifyTags() {
-    let numCurMsg = analData[selTime].msgs.toString();	
+    try {
+        var numCurMsg = analData[selTime].msgs.toString();	
+    } catch(e) {
+        var numCurMsg = "Loading";
+    }
 	document.getElementById("tim").src = timeimg;
 	document.getElementById("curtim").innerHTML = selTime;
 	document.getElementById("msgs").src = msgimg;

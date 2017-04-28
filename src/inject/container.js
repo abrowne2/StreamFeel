@@ -7,7 +7,6 @@ var selTime;
 var darkmode = false;
 var analData = {};
 var store_map = {};
-var qd_emotes = {};
 var oldStream = "";
 var curStream = window.location.href;
 var need = [], handled = [];
