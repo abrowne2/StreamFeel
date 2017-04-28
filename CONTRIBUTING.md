@@ -1,6 +1,5 @@
 # Contributing to StreamFeel
 
-StreamFeel uses thousands of twitch chat messages to power its' filtering and sentiment analysis; 
 Before contributing, please review the info below.
 
 * [Submit Chat Message(s)](https://github.com/abrowne2/StreamFeel/issues/new?title=Improving+Chat+Filter&assignee=abrowne2&body=Please+enter+your+message(s)+here+and+their+relevance.&labels[]=message)
@@ -9,7 +8,7 @@ Before contributing, please review the info below.
 
 ## Submitting New Chat Messages
 
-By submitting new messages, you make StreamFeel more accurate.
+StreamFeel uses thousands of twitch chat messages to power its' filtering and sentiment analysis; By submitting new messages, you make StreamFeel more accurate.
 * Messages are either "relevant" or not.
 * Include the message and its' relevance. Reasoning is optional, but appreciated.
 
