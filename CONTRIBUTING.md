@@ -5,7 +5,7 @@ Before contributing, please review the info below.
 
 * [Submit Chat Message(s)](https://github.com/abrowne2/StreamFeel/issues/new?title=Improving+Chat+Filter&assignee=abrowne2&body=Please+enter+your+message(s)+here+and+their+relevance.&labels[]=message)
 
-* [Report an Issue](https://github.com/abrowne2/StreamFeel/issues/new?title=Change+This+Detailed+Bug+Title&assignee=abrowne2&body=Please+be+detailed+and+include+the+error+report+and+any+other+info&labels[]=bug)
+* [Report an Issue](https://github.com/abrowne2/StreamFeel/issues/new?title=Change+This+Bug+Title&assignee=abrowne2&body=Please+be+detailed,+include+error+report+and+any+other+info&labels[]=bug)
 
 ## Submitting New Chat Messages
 
