@@ -1,4 +1,4 @@
-var toggle_filter = false;
+var toggle_filter = false, cbox;
 var setting = 0;
 var pie = null;
 var stored_emotes = {};

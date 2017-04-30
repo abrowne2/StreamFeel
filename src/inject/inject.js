@@ -29,27 +29,38 @@ function MessageHandler(message){
     var target_msg = document.getElementById(data[0]);
     try {
         user = data[2].toLowerCase();
-    } catch (err) {}
+    } catch (err) {
+        user = data[2];
+    }
     if(toggle_filter == false) {
 	    try {
-            if(data[4] == "1" || user == current_user)
-                target_msg.setAttribute("style", "display:block;visibility:visible;");
-            else
+            if(data[4] == "1" || user == current_user){
+                var inserted = msgPopFix(target_msg);                
+                setTimeout(function() {
+                    inserted.remove();
+                }, 180000);
+            } else {
                 target_msg.remove();
-	    } catch (err) {}
-        storeAnalyticsData(data);		    
+            }
+            storeAnalyticsData(data);                       
+	    } catch (err) {
+            console.log("Error: " + err.toString())
+        }
     } else {
-        target_msg.setAttribute("style", "display:block;visibility:visible;");		
+        var inserted = msgPopFix(target_msg);
         storeAnalyticsData(data);
         data[5] = "";
         need.push(data.join('|'));
     }
 }
 
-//complete this at a later date.
-// function handleMentions(selTime) {
-
-// }
+function msgPopFix(e) {
+    var inserted = e.cloneNode(true);                
+    e.remove();
+    inserted.setAttribute("style", "display:block;visibility:visible;");    
+    cbox.appendChild(inserted);            
+    return inserted;
+}
 
 function enqueueEmote(label, time) {
     if (!(time in analData == true)) 
@@ -65,7 +76,8 @@ function parseEmotes(message, time) {
         var textRep = current_emote.getAttribute("alt");
         if (!(textRep in store_map) == true){
             let imgSrc = current_emote.getAttribute("src");
-            var impat = new Image(), pat;
+            var impat = new Image();
+            //bttv emotes
             impat.src = (imgSrc[0] != '/'? imgSrc: "https:" + imgSrc);
             var c = document.getElementById("painted");
             let context = c.getContext('2d');			
@@ -145,8 +157,6 @@ function StreamData() {
 
 function handleRecord(data) {
     var cur_time = data[1], record;
-    if (!(cur_time in analData) == true)
-        analData[cur_time] = new StreamData();
     if (data[5] != "") { //sentiment analytics
         record = data[5];
         analData[cur_time].storeRecord(record);
@@ -170,7 +180,7 @@ function handleSlider() {
 	slider.max = times.length - 1;
 	selTime = times[slider.value];	
     modifyTags();
-    let bColor = renderData(selTime);
+    var bColor = renderData(selTime);
     if(setting == 1){
         pie.data.datasets[0].backgroundColor = bColor;
         pie.options.title.text = "Emote Analytics";
@@ -212,7 +222,9 @@ function modifyTags() {
 }
 
 function storeAnalyticsData(data) {
-	isRealtime();
+    if (!(data[1] in analData) == true)
+        analData[data[1]] = new StreamData();	
+    isRealtime();
     handleRecord(data);
     checkDarkMode();
 	handleSlider();    
@@ -267,33 +279,23 @@ var getChatBoxElement = function(main) {
 }
 
 var setupMessageListener = function(chat_box) {
+    cbox = chat_box;
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             for (var i = 0; i < mutation.addedNodes.length; ++i) {
                 var newTwitchMsg = mutation.addedNodes[i], identifier;
-                var isValid = true;
-                if (newTwitchMsg.id != "undefined" && newTwitchMsg.id != "") { //native twitch
+                if (newTwitchMsg.id != "undefined" && newTwitchMsg.id != ""){
                     identifier = newTwitchMsg.id;
-                } else {
-                    identifier = newTwitchMsg.getAttribute("data-id"); //better twitch tv
-                    if (identifier == "undefined") { //an admin message.
-                        newTwitchMsg.setAttribute("style", "display:block;visibility:visible;");
+                    if (handled.includes(identifier) == false) {
+                        handled.push(identifier);
+                        handleTwitchMsg(newTwitchMsg);
                     }
-                    isValid = false;
-                }
-                if (handled.includes(identifier) == false) {
-                    handled.push(identifier);
-                    if (isValid == false) //better twitch tv compatibility
-                        newTwitchMsg.setAttribute("id", identifier);
-                    handleTwitchMsg(newTwitchMsg);
                 }
             }
         })
     });
     //listen for new chat messages. We've incorporated BTTV compatibility.
-    observer.observe(chat_box, {
-        childList: true
-    });
+    observer.observe(chat_box, {childList: true});
 }
 
 //if we're turning the filter back on, process all queued messages.
