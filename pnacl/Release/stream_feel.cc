@@ -284,16 +284,17 @@ struct responseFormatter {
 			messages.erase(sec);
 	}
 
-	//modify this so that the times are within 30 sec intervals (use std::chrono)
+	//need to improve this.
 	bool isSpam(std::string& time, std::string& msg) {		
-		int sec = seconds(time);
-		cleanupHist(sec - 120);
-		if(messages.find(sec) == messages.end()){
-			std::unordered_map<std::string, int> msg_freq;
-			messages[sec] = msg_freq;
-		}
-		return (messages.find(sec-60) != messages.end()? messages[sec][msg]++ >= 1 || 
-			messages[sec-60][msg] >= 1: messages[sec][msg]++ >= 1);
+		// int sec = seconds(time);
+		// cleanupHist(sec - 120);
+		// if(messages.find(sec) == messages.end()){
+		// 	std::unordered_map<std::string, int> msg_freq;
+		// 	messages[sec] = msg_freq;
+		// }
+		// return (messages.find(sec-60) != messages.end()? messages[sec][msg]++ >= 1 || 
+		// 	messages[sec-60][msg] >= 1: messages[sec][msg]++ >= 1);
+		return false;
 	}	
 
 	/* Parses HH:MM into seconds; if there are multiple or no colons, 

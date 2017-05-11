@@ -227,7 +227,7 @@ function storeAnalyticsData(data) {
     isRealtime();
     handleRecord(data);
     checkDarkMode();
-	handleSlider();    
+    handleSlider();    
 }
 
 
