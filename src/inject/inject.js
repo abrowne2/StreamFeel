@@ -2,7 +2,10 @@
  * Inject.js is the content script which analyzes twitch. */
 //Chart visualization code is in another file due to it's "spammy" nature w/ dynamically created HTML elements and styles.
 
- chrome.runtime.onMessage.addListener(function(response) {
+
+var curId = 0
+
+chrome.runtime.onMessage.addListener(function(response) {
     if (response == "tf")
         toggleFilter();
     else if(response == "ss")
@@ -27,6 +30,7 @@ function isRealtime() {
 function MessageHandler(message){
     var data = message.split("|"), user;
     var target_msg = document.getElementById(data[0]);
+    console.log(target_msg)
     try {
         user = data[2].toLowerCase();
     } catch (err) {
@@ -232,31 +236,22 @@ function storeAnalyticsData(data) {
 
 
 var handleTwitchMsg = function(msg) {
-    var go_on = false;
+    var go_on = false, message;
     try {
-        var timestamp = msg.querySelector("span.timestamp").textContent
-        var user = msg.querySelector("span.from").textContent
-        var message = msg.querySelector("span.message")
-        parseEmotes(message, timestamp);
+        var timestamp = Date.now()
+        message = msg.querySelector("span.text-fragment")
+        // parseEmotes(message, timestamp);
         go_on = true;
     } catch(err) {
+        console.log(err)
         go_on = false;
     }
-    if(go_on == true) {
-        if (message.hasAttribute("data-raw") == true) { //better twitch tv
-            try {
-                var raw_msg = decodeURIComponent(message.getAttribute("data-raw"));
-                message = raw_msg.trim();
-            } catch (err) {
-                message = message.textContent.trim();
-            }
-        } else {
-            message = message.textContent.trim();
-        }
+    if(go_on == true) {        
+        message = message.textContent.trim();
         port.postMessage({
             id: msg.id,
             time: timestamp,
-            usr: user,
+            usr: '',
             curusr: current_user,
             data: message
         });
@@ -265,6 +260,7 @@ var handleTwitchMsg = function(msg) {
 
 var getChatBoxElement = function(main) {
     if (document.querySelector(main) != null) {
+        console.log("loaded")
         setupMessageListener(document.querySelector(main));
         var sentChart = setupDataViz();
         if (sentChart != null) {
@@ -284,6 +280,7 @@ var setupMessageListener = function(chat_box) {
         mutations.forEach(function(mutation) {
             for (var i = 0; i < mutation.addedNodes.length; ++i) {
                 var newTwitchMsg = mutation.addedNodes[i], identifier;
+                newTwitchMsg.id = (curId++).toString()
                 if (newTwitchMsg.id != "undefined" && newTwitchMsg.id != ""){
                     identifier = newTwitchMsg.id;
                     if (handled.includes(identifier) == false) {
@@ -327,7 +324,7 @@ function setupChart(construct) {
 function checkChangedStream(curStream) {
     if (curStream != oldStream) {
         oldStream = curStream;
-        getChatBoxElement("ul.chat-lines");
+        getChatBoxElement("div.chat-list__list-container");
     }
     oldStream = window.location.href;
     setTimeout(function() {
